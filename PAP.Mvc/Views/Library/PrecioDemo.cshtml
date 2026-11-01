@@ -1,0 +1,29 @@
+@*
+    Ejemplo: Model Binder personalizado
+    El campo "precio" acepta formatos como $18.99; CurrencyModelBinder lo convierte a decimal.
+*@
+@{
+    ViewBag.Title = "Demo Model Binder";
+}
+
+<main>
+    <h1 class="h2 mb-3">Model Binder personalizado</h1>
+    <p class="text-muted">Prueba valores como <code>$18.99</code> o <code>22.50</code>.</p>
+
+    @using (Html.BeginForm("PrecioDemo", "Library", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        <div class="mb-3">
+            <label class="form-label" for="precio">Precio</label>
+            <input class="form-control" type="text" id="precio" name="precio" placeholder="$18.99" />
+        </div>
+        <button type="submit" class="btn btn-primary">Convertir</button>
+    }
+
+    @if (ViewBag.PrecioConvertido != null)
+    {
+        <div class="alert alert-info mt-4" role="alert">
+            Precio enlazado: <strong>@(((decimal)ViewBag.PrecioConvertido).ToString("C"))</strong>
+        </div>
+    }
+</main>

@@ -1,0 +1,32 @@
+@*
+    Ejemplo: Vistas compartidas
+    Partial view reutilizable: se incluye desde otras vistas con Html.Partial / Html.RenderPartial.
+*@
+@model PAP.DataAccess.Book
+
+<tr>
+    <td>@Model.Id</td>
+    <td>
+        <div class="fw-semibold">@Model.Title</div>
+        @if (Model.IsBestSeller)
+        {
+            <span class="badge text-bg-warning">Best seller</span>
+        }
+    </td>
+    <td>@Model.Author</td>
+    <td>@Model.Genre</td>
+    <td>@Model.Category</td>
+    <td>@Model.Publisher</td>
+    <td>@(Model.PublicationDate.HasValue ? Model.PublicationDate.Value.ToString("MMM d, yyyy") : "-")</td>
+    <td class="text-end">@Model.Price.ToString("C")</td>
+    <td>
+        @if (Model.IsInStock)
+        {
+            <span class="badge text-bg-success">In stock</span>
+        }
+        else
+        {
+            <span class="badge text-bg-secondary">Out of stock</span>
+        }
+    </td>
+</tr>

@@ -1,0 +1,65 @@
+﻿@*
+    Ejemplo: Strongly Typed Views (vistas tipadas)
+    @model declara el tipo del modelo; la vista usa Model con tipado fuerte.
+*@
+@model IEnumerable<PAP.DataAccess.Book>
+
+@{
+    ViewBag.Title = "Books";
+    var books = Model?.ToList() ?? new List<PAP.DataAccess.Book>();
+}
+
+<main>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1">Books</h1>
+            <p class="text-muted mb-0">@books.Count title@(books.Count == 1 ? "" : "s") in the catalog</p>
+        </div>
+        <div>
+            @Html.ActionLink("Vista cards", "Catalog", "Library", new { vista = "cards" }, new { @class = "btn btn-outline-dark btn-sm" })
+            @Html.ActionLink("Crear libro", "Create", "Library", null, new { @class = "btn btn-primary btn-sm" })
+        </div>
+    </div>
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-info" role="alert">@TempData["Mensaje"]</div>
+    }
+
+    @if (!books.Any())
+    {
+        <div class="alert alert-info" role="alert">
+            No books are available at this time.
+        </div>
+    }
+    else
+    {
+        @*
+            Ejemplo: Vistas con Bootstrap
+            table, table-striped, table-hover y badges de Bootstrap 5 dan formato profesional a la lista.
+        *@
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Title</th>
+                        <th scope="col">Author</th>
+                        <th scope="col">Genre</th>
+                        <th scope="col">Category</th>
+                        <th scope="col">Publisher</th>
+                        <th scope="col">Published</th>
+                        <th scope="col" class="text-end">Price</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var book in books)
+                    {
+                        @Html.Partial("_BookRow", book)
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</main>

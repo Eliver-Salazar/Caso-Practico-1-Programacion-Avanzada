@@ -1,0 +1,31 @@
+@*
+    Ejemplo: Strongly Typed Views (vistas tipadas) + Restricciones de ruta
+    Esta vista recibe un Book tipado. Se alcanza por /libro/{id} (solo si id es numérico)
+    o por la ruta de atributo /biblioteca/detalle/{id}.
+*@
+@model PAP.DataAccess.Book
+
+@{
+    ViewBag.Title = Model.Title;
+}
+
+<main>
+    <h1 class="h2 mb-3">@Model.Title</h1>
+    <dl class="row">
+        <dt class="col-sm-3">Author</dt>
+        <dd class="col-sm-9">@Model.Author</dd>
+        <dt class="col-sm-3">Publisher</dt>
+        <dd class="col-sm-9">@Model.Publisher</dd>
+        <dt class="col-sm-3">Genre</dt>
+        <dd class="col-sm-9">@Model.Genre</dd>
+        <dt class="col-sm-3">Category</dt>
+        <dd class="col-sm-9">@Model.Category</dd>
+        <dt class="col-sm-3">Published</dt>
+        <dd class="col-sm-9">@(Model.PublicationDate.HasValue ? Model.PublicationDate.Value.ToString("D") : "-")</dd>
+        <dt class="col-sm-3">Price</dt>
+        <dd class="col-sm-9">@Model.Price.ToString("C")</dd>
+        <dt class="col-sm-3">Description</dt>
+        <dd class="col-sm-9">@Model.Description</dd>
+    </dl>
+    <p>@Html.ActionLink("Volver al catálogo", "Index", "Library", null, new { @class = "btn btn-outline-dark" })</p>
+</main>

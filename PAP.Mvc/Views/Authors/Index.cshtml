@@ -1,0 +1,248 @@
+﻿@model IEnumerable<PAP.DataAccess.Author>
+
+@{
+    ViewBag.Title = "Autores";
+
+    // El controlador indica qué sección mostrar.
+    string mode = ViewBag.Mode as string ?? "";
+    var selected = ViewBag.SelectedAuthor as PAP.DataAccess.Author;
+}
+
+@* Encabezado con el botón de agregar a la derecha. *@
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Autores</h2>
+
+    <a href="@Url.Action("Index", "Authors", new { mode = "create" })"
+       class="btn btn-primary">
+        Agregar autor
+    </a>
+</div>
+
+@* Mensajes después de guardar o eliminar. *@
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success" role="alert">
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @TempData["Error"]
+    </div>
+}
+
+@* Crear y editar comparten el mismo formulario dentro de Index. *@
+@if (mode == "create" || mode == "edit")
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            @(mode == "create" ? "Agregar autor" : "Editar autor")
+        </div>
+
+        <div class="card-body">
+            @using (Html.BeginForm("Save", "Authors", FormMethod.Post))
+            {
+                @* Protege el formulario contra solicitudes falsificadas. *@
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+                <input type="hidden" name="Id" value="@selected.Id" />
+
+                <div class="mb-3">
+                    <label for="FirstName" class="form-label">Nombre</label>
+                    @Html.TextBox(
+                        "FirstName",
+                        selected.FirstName,
+                        new
+                             {
+                            @class = "form-control",
+                            maxlength = "100",
+                            required = "required"
+                        })
+                </div>
+
+                <div class="mb-3">
+                    <label for="LastName" class="form-label">Apellido</label>
+                    @Html.TextBox(
+                        "LastName",
+                        selected.LastName,
+                        new
+                             {
+                            @class = "form-control",
+                            maxlength = "100",
+                            required = "required"
+                        })
+                </div>
+
+                <div class="mb-3">
+                    <label for="Country" class="form-label">País</label>
+                    @Html.TextBox(
+                        "Country",
+                        selected.Country,
+                        new { @class = "form-control", maxlength = "100" })
+                </div>
+
+                <div class="mb-3">
+                    <label for="BirthDate" class="form-label">
+                        Fecha de nacimiento
+                    </label>
+
+                    @Html.TextBox(
+                        "BirthDate",
+                        selected.BirthDate.HasValue
+                            ? selected.BirthDate.Value.ToString("yyyy-MM-dd")
+                            : "",
+                        new { @class = "form-control", type = "date" })
+                </div>
+
+                <div class="mb-3">
+                    <label for="Biography" class="form-label">Biografía</label>
+                    @Html.TextArea(
+                        "Biography",
+                        selected.Biography,
+                        new { @class = "form-control", rows = "4" })
+                </div>
+
+                <button type="submit" class="btn btn-success">
+                    Guardar
+                </button>
+
+                <a href="@Url.Action("Index", "Authors")"
+                   class="btn btn-secondary">
+                    Cancelar
+                </a>
+            }
+        </div>
+    </div>
+}
+
+@* El detalle muestra todos los campos del autor. *@
+@if (mode == "details")
+{
+    <div class="card mb-4">
+        <div class="card-header">Detalle del autor</div>
+
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@selected.Id</dd>
+
+                <dt class="col-sm-3">Nombre</dt>
+                <dd class="col-sm-9">@selected.FirstName</dd>
+
+                <dt class="col-sm-3">Apellido</dt>
+                <dd class="col-sm-9">@selected.LastName</dd>
+
+                <dt class="col-sm-3">País</dt>
+                <dd class="col-sm-9">@selected.Country</dd>
+
+                <dt class="col-sm-3">Nacimiento</dt>
+                <dd class="col-sm-9">
+                    @(selected.BirthDate.HasValue
+                        ? selected.BirthDate.Value.ToString("dd/MM/yyyy")
+                        : "Sin registrar")
+                </dd>
+
+                <dt class="col-sm-3">Biografía</dt>
+                <dd class="col-sm-9" style="white-space: pre-wrap">@selected.Biography</dd>
+
+                <dt class="col-sm-3">Creación (UTC)</dt>
+                <dd class="col-sm-9">
+                    @selected.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                </dd>
+            </dl>
+
+            <a href="@Url.Action("Index", "Authors")"
+               class="btn btn-secondary">
+                Volver
+            </a>
+        </div>
+    </div>
+}
+
+@* La confirmación también aparece dentro de la misma vista. *@
+@if (mode == "delete")
+{
+    <div class="alert alert-warning">
+        <p>
+            ¿Eliminar a
+            <strong>@selected.FirstName @selected.LastName</strong>?
+        </p>
+
+        @using (Html.BeginForm("Delete", "Authors", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" name="id" value="@selected.Id" />
+
+            <button type="submit" class="btn btn-danger">
+                Confirmar eliminación
+            </button>
+
+            <a href="@Url.Action("Index", "Authors")"
+               class="btn btn-secondary">
+                Cancelar
+            </a>
+        }
+    </div>
+}
+
+@* Tabla principal: las acciones aparecen a la derecha. *@
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>País</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+                <th>Detalle</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var author in Model)
+            {
+                <tr>
+                    <td>@author.Id</td>
+                    <td>@author.FirstName</td>
+                    <td>@author.LastName</td>
+                    <td>@author.Country</td>
+
+                    <td>
+                        <a class="btn btn-warning btn-sm"
+                           href="@Url.Action("Index", "Authors",
+                               new { mode = "edit", id = author.Id })">
+                            Editar
+                        </a>
+                    </td>
+
+                    <td>
+                        <a class="btn btn-danger btn-sm"
+                           href="@Url.Action("Index", "Authors",
+                               new { mode = "delete", id = author.Id })">
+                            Eliminar
+                        </a>
+                    </td>
+
+                    <td>
+                        <a class="btn btn-info btn-sm"
+                           href="@Url.Action("Index", "Authors",
+                               new { mode = "details", id = author.Id })">
+                            Detalle
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Todavía no hay autores registrados.</p>
+}

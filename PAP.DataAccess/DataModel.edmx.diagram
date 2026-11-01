@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="f09b35283ad3476eb60e3d8462afb800" Name="Diagram1" ZoomLevel="25">
+        <EntityTypeShape EntityType="BookStoreDBModel.Book" Width="1.5" PointX="2.125" PointY="1.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="BookStoreDBModel.Address" Width="1.5" PointX="7.5" PointY="10.75" />
+        <EntityTypeShape EntityType="BookStoreDBModel.Author" Width="1.5" PointX="0.75" PointY="16.125" />
+        <EntityTypeShape EntityType="BookStoreDBModel.CartItem" Width="1.5" PointX="9.75" PointY="4.5" />
+        <EntityTypeShape EntityType="BookStoreDBModel.Category" Width="1.5" PointX="0.75" PointY="13.625" />
+        <EntityTypeShape EntityType="BookStoreDBModel.Customer" Width="1.5" PointX="5.25" PointY="5.75" />
+        <EntityTypeShape EntityType="BookStoreDBModel.Employee" Width="1.5" PointX="16.5" PointY="7" />
+        <EntityTypeShape EntityType="BookStoreDBModel.Genre" Width="1.5" PointX="0.75" PointY="11.125" />
+        <EntityTypeShape EntityType="BookStoreDBModel.Inventory" Width="1.5" PointX="5.25" PointY="2.75" />
+        <EntityTypeShape EntityType="BookStoreDBModel.OrderItem" Width="1.5" PointX="12" PointY="5.25" />
+        <EntityTypeShape EntityType="BookStoreDBModel.Order" Width="1.5" PointX="9.75" PointY="7.875" />
+        <EntityTypeShape EntityType="BookStoreDBModel.Payment" Width="1.5" PointX="12" PointY="11.875" />
+        <EntityTypeShape EntityType="BookStoreDBModel.Publisher" Width="1.5" PointX="0.75" PointY="8" />
+        <EntityTypeShape EntityType="BookStoreDBModel.PurchaseOrderItem" Width="1.5" PointX="16.75" PointY="3.5" />
+        <EntityTypeShape EntityType="BookStoreDBModel.PurchaseOrder" Width="1.5" PointX="14.5" PointY="1" />
+        <EntityTypeShape EntityType="BookStoreDBModel.Review" Width="1.5" PointX="7.5" PointY="4.125" />
+        <EntityTypeShape EntityType="BookStoreDBModel.Role" Width="1.5" PointX="14.25" PointY="7.5" />
+        <EntityTypeShape EntityType="BookStoreDBModel.ShoppingCart" Width="1.5" PointX="7.5" PointY="7.875" />
+        <EntityTypeShape EntityType="BookStoreDBModel.Supplier" Width="1.5" PointX="12.25" PointY="1" />
+        <AssociationConnector Association="BookStoreDBModel.FK_Addresses_Customers" />
+        <AssociationConnector Association="BookStoreDBModel.FK_Orders_Addresses" />
+        <AssociationConnector Association="BookStoreDBModel.FK_Books_Categories" />
+        <AssociationConnector Association="BookStoreDBModel.FK_Books_Genres" />
+        <AssociationConnector Association="BookStoreDBModel.FK_Books_Publishers" />
+        <AssociationConnector Association="BookStoreDBModel.FK_CartItems_Books" />
+        <AssociationConnector Association="BookStoreDBModel.FK_Inventory_Books" />
+        <AssociationConnector Association="BookStoreDBModel.FK_OrderItems_Books" />
+        <AssociationConnector Association="BookStoreDBModel.FK_POItems_Books" />
+        <AssociationConnector Association="BookStoreDBModel.FK_Reviews_Books" />
+        <AssociationConnector Association="BookStoreDBModel.FK_CartItems_Carts" />
+        <AssociationConnector Association="BookStoreDBModel.FK_Orders_Customers" />
+        <AssociationConnector Association="BookStoreDBModel.FK_Reviews_Customers" />
+        <AssociationConnector Association="BookStoreDBModel.FK_ShoppingCarts_Customers" />
+        <AssociationConnector Association="BookStoreDBModel.FK_Employees_Roles" />
+        <AssociationConnector Association="BookStoreDBModel.FK_OrderItems_Orders" />
+        <AssociationConnector Association="BookStoreDBModel.FK_Payments_Orders" />
+        <AssociationConnector Association="BookStoreDBModel.FK_POItems_PurchaseOrders" />
+        <AssociationConnector Association="BookStoreDBModel.FK_PurchaseOrders_Suppliers" />
+        <AssociationConnector Association="BookStoreDBModel.BookAuthors" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

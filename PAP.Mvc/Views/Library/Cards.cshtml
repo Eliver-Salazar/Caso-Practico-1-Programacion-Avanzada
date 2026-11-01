@@ -1,0 +1,39 @@
+@*
+    Ejemplo: Vistas múltiples
+    Otra vista para los mismos datos (lista de libros) con diseño de tarjetas en lugar de tabla.
+*@
+@model IEnumerable<PAP.DataAccess.Book>
+
+@{
+    ViewBag.Title = "Books — Cards";
+    var books = Model?.ToList() ?? new List<PAP.DataAccess.Book>();
+}
+
+<main>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1">Books</h1>
+            <p class="text-muted mb-0">Vista alternativa en tarjetas</p>
+        </div>
+        @Html.ActionLink("Vista tabla", "Index", "Library", null, new { @class = "btn btn-outline-dark btn-sm" })
+    </div>
+
+    @*
+        Ejemplo: Vistas con Bootstrap
+        Grid responsive (row / col-md-4) y utilidades de espaciado de Bootstrap.
+    *@
+    <div class="row g-3">
+        @foreach (var book in books)
+        {
+            <div class="col-md-4">
+                <div class="p-3 h-100" style="background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius);">
+                    <h2 class="h5 mb-1">@book.Title</h2>
+                    <p class="text-muted mb-2">@book.Author</p>
+                    <p class="small mb-2">@book.Genre · @book.Category</p>
+                    <p class="mb-2">@book.Price.ToString("C")</p>
+                    @Html.ActionLink("Detalle", "Details", "Library", new { id = book.Id }, new { @class = "btn btn-primary btn-sm" })
+                </div>
+            </div>
+        }
+    </div>
+</main>
