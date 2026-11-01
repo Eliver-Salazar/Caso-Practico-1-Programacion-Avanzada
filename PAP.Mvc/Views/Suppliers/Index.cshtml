@@ -1,0 +1,242 @@
+﻿@using System.Linq
+@model IEnumerable<PAP.DataAccess.Supplier>
+
+@{
+    ViewBag.Title = "Proveedores";
+
+    // Obtiene la operación y el proveedor seleccionado.
+    string mode = ViewBag.Mode as string ?? "";
+    var selected = ViewBag.SelectedSupplier as PAP.DataAccess.Supplier;
+}
+
+@* Encabezado con el botón de agregar a la derecha. *@
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Proveedores</h2>
+
+    <a href="@Url.Action("Index", "Suppliers", new { mode = "create" })"
+       class="btn btn-primary">
+        Agregar proveedor
+    </a>
+</div>
+
+@* Mensajes del resultado de las operaciones. *@
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success" role="alert">
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @TempData["Error"]
+    </div>
+}
+
+@* Formulario compartido para crear y editar proveedores. *@
+@if (mode == "create" || mode == "edit")
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            @(mode == "create" ? "Agregar proveedor" : "Editar proveedor")
+        </div>
+
+        <div class="card-body">
+            @using (Html.BeginForm("Save", "Suppliers", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+                <input type="hidden" name="Id" value="@selected.Id" />
+
+                <div class="mb-3">
+                    <label for="Name" class="form-label">Nombre</label>
+                    @Html.TextBox("Name", selected.Name, new
+                    {
+                        @class = "form-control",
+                        maxlength = "200",
+                        required = "required"
+                    })
+                </div>
+
+                <div class="mb-3">
+                    <label for="ContactName" class="form-label">
+                        Persona de contacto
+                    </label>
+                    @Html.TextBox("ContactName", selected.ContactName, new
+                    {
+                        @class = "form-control",
+                        maxlength = "150"
+                    })
+                </div>
+
+                <div class="mb-3">
+                    <label for="Email" class="form-label">Correo</label>
+                    @Html.TextBox("Email", selected.Email, new
+                    {
+                        @class = "form-control",
+                        maxlength = "150",
+                        type = "email"
+                    })
+                </div>
+
+                <div class="mb-3">
+                    <label for="Phone" class="form-label">Teléfono</label>
+                    @Html.TextBox("Phone", selected.Phone, new
+                    {
+                        @class = "form-control",
+                        maxlength = "30",
+                        type = "tel"
+                    })
+                </div>
+
+                <div class="mb-3">
+                    <label for="Address" class="form-label">Dirección</label>
+                    @Html.TextArea("Address", selected.Address, new
+                    {
+                        @class = "form-control",
+                        maxlength = "300",
+                        rows = "3"
+                    })
+                </div>
+
+                @* CheckBox genera también el valor false si se desmarca. *@
+                <div class="form-check mb-3">
+                    @Html.CheckBox("IsActive", selected.IsActive,
+                        new { @class = "form-check-input" })
+                    <label for="IsActive" class="form-check-label">
+                        Activo
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-success">Guardar</button>
+
+                <a href="@Url.Action("Index", "Suppliers")"
+                   class="btn btn-secondary">
+                    Cancelar
+                </a>
+            }
+        </div>
+    </div>
+}
+
+@* Detalle completo del proveedor. *@
+@if (mode == "details")
+{
+    <div class="card mb-4">
+        <div class="card-header">Detalle del proveedor</div>
+
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@selected.Id</dd>
+
+                <dt class="col-sm-3">Nombre</dt>
+                <dd class="col-sm-9">@selected.Name</dd>
+
+                <dt class="col-sm-3">Contacto</dt>
+                <dd class="col-sm-9">@selected.ContactName</dd>
+
+                <dt class="col-sm-3">Correo</dt>
+                <dd class="col-sm-9">@selected.Email</dd>
+
+                <dt class="col-sm-3">Teléfono</dt>
+                <dd class="col-sm-9">@selected.Phone</dd>
+
+                <dt class="col-sm-3">Dirección</dt>
+                <dd class="col-sm-9" style="white-space: pre-wrap">@selected.Address</dd>
+
+                <dt class="col-sm-3">Estado</dt>
+                <dd class="col-sm-9">
+                    @(selected.IsActive ? "Activo" : "Inactivo")
+                </dd>
+            </dl>
+
+            <a href="@Url.Action("Index", "Suppliers")"
+               class="btn btn-secondary">
+                Volver
+            </a>
+        </div>
+    </div>
+}
+
+@* Confirmación antes de eliminar. *@
+@if (mode == "delete")
+{
+    <div class="alert alert-warning">
+        <p>¿Eliminar el proveedor <strong>@selected.Name</strong>?</p>
+
+        @using (Html.BeginForm("Delete", "Suppliers", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" name="id" value="@selected.Id" />
+
+            <button type="submit" class="btn btn-danger">
+                Confirmar eliminación
+            </button>
+
+            <a href="@Url.Action("Index", "Suppliers")"
+               class="btn btn-secondary">
+                Cancelar
+            </a>
+        }
+    </div>
+}
+
+@* Tabla principal con las acciones a la derecha. *@
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Contacto</th>
+                <th>Teléfono</th>
+                <th>Estado</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+                <th>Detalle</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var supplier in Model)
+            {
+                <tr>
+                    <td>@supplier.Id</td>
+                    <td>@supplier.Name</td>
+                    <td>@supplier.ContactName</td>
+                    <td>@supplier.Phone</td>
+                    <td>@(supplier.IsActive ? "Activo" : "Inactivo")</td>
+                    <td>
+                        <a class="btn btn-warning btn-sm"
+                           href="@Url.Action("Index", "Suppliers",
+                               new { mode = "edit", id = supplier.Id })">
+                            Editar
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-danger btn-sm"
+                           href="@Url.Action("Index", "Suppliers",
+                               new { mode = "delete", id = supplier.Id })">
+                            Eliminar
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-info btn-sm"
+                           href="@Url.Action("Index", "Suppliers",
+                               new { mode = "details", id = supplier.Id })">
+                            Detalle
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Todavía no hay proveedores registrados.</p>
+}

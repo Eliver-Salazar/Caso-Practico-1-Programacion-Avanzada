@@ -41,9 +41,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddressManager.cs" />
     <Compile Include="BookManager.cs" />
     <Compile Include="AuthorManager.cs" />
+    <Compile Include="CartItemManager.cs" />
     <Compile Include="CategoryManager.cs" />
+    <Compile Include="CustomerManager.cs" />
+    <Compile Include="EmployeeManager.cs" />
+    <Compile Include="InventoryManager.cs" />
+    <Compile Include="ReviewManager.cs" />
+    <Compile Include="ShoppingCartManager.cs" />
+    <Compile Include="SupplierManager.cs" />
+    <Compile Include="PublisherManager.cs" />
     <Compile Include="RoleManager.cs" />
     <Compile Include="GenreManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -1,0 +1,207 @@
+﻿@using System.Linq
+@using System.Collections.Generic
+@model IEnumerable<PAP.DataAccess.ShoppingCart>
+
+@{
+    ViewBag.Title = "Carritos";
+
+    // Recupera la operación, el carrito y los nombres de clientes.
+    string mode = ViewBag.Mode as string ?? "";
+    var selected = ViewBag.SelectedCart as PAP.DataAccess.ShoppingCart;
+    var customerNames = (Dictionary<int, string>)ViewBag.CustomerNames;
+}
+
+@* Encabezado y botón de agregar a la derecha. *@
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Carritos de compra</h2>
+
+    <a class="btn btn-primary"
+       href="@Url.Action("Index", "ShoppingCarts", new { mode = "create" })">
+        Agregar carrito
+    </a>
+</div>
+
+@* Mensajes del resultado de las operaciones. *@
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+@if (customerNames.Count == 0)
+{
+    <div class="alert alert-info">
+        Primero registrá un cliente desde el menú Clientes.
+    </div>
+}
+
+@* Crear y editar comparten el mismo formulario. *@
+@if (mode == "create" || mode == "edit")
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            @(mode == "create" ? "Agregar carrito" : "Editar carrito")
+        </div>
+
+        <div class="card-body">
+            @using (Html.BeginForm("Save", "ShoppingCarts", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+                <input type="hidden" name="Id" value="@selected.Id" />
+
+                <div class="mb-3">
+                    <label for="CustomerId">Cliente</label>
+
+                    @Html.DropDownList(
+                        "CustomerId",
+                        (SelectList)ViewBag.CustomerOptions,
+                        "Seleccioná un cliente",
+                        new
+                        {
+                            @class = "form-select",
+                            required = "required"
+                        })
+                </div>
+
+                <p class="text-muted">
+                    Las fechas se registran automáticamente.
+                </p>
+
+                <button type="submit" class="btn btn-success">Guardar</button>
+
+                <a class="btn btn-secondary"
+                   href="@Url.Action("Index", "ShoppingCarts")">
+                    Cancelar
+                </a>
+            }
+        </div>
+    </div>
+}
+
+@* Detalle completo de los campos del carrito. *@
+@if (mode == "details")
+{
+    <div class="card mb-4">
+        <div class="card-header">Detalle del carrito</div>
+
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@selected.Id</dd>
+
+                <dt class="col-sm-3">ID del cliente</dt>
+                <dd class="col-sm-9">@selected.CustomerId</dd>
+
+                <dt class="col-sm-3">Cliente</dt>
+                <dd class="col-sm-9">
+                    @(customerNames.ContainsKey(selected.CustomerId)
+                        ? customerNames[selected.CustomerId]
+                        : "No disponible")
+                </dd>
+
+                <dt class="col-sm-3">Creación (UTC)</dt>
+                <dd class="col-sm-9">
+                    @selected.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                </dd>
+
+                <dt class="col-sm-3">Actualización (UTC)</dt>
+                <dd class="col-sm-9">
+                    @selected.UpdatedAt.ToString("dd/MM/yyyy HH:mm")
+                </dd>
+            </dl>
+
+            <a class="btn btn-secondary"
+               href="@Url.Action("Index", "ShoppingCarts")">
+                Volver
+            </a>
+        </div>
+    </div>
+}
+
+@* Confirmación antes de eliminar el carrito. *@
+@if (mode == "delete")
+{
+    <div class="alert alert-warning">
+        <p>¿Eliminar el carrito <strong>#@selected.Id</strong>?</p>
+
+        @using (Html.BeginForm("Delete", "ShoppingCarts", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@selected.Id" />
+
+            <button type="submit" class="btn btn-danger">
+                Confirmar eliminación
+            </button>
+
+            <a class="btn btn-secondary"
+               href="@Url.Action("Index", "ShoppingCarts")">
+                Cancelar
+            </a>
+        }
+    </div>
+}
+
+@* Tabla principal con las acciones a la derecha. *@
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Creación (UTC)</th>
+                <th>Actualización (UTC)</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+                <th>Detalle</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var cart in Model)
+            {
+                <tr>
+                    <td>@cart.Id</td>
+                    <td>
+                        @(customerNames.ContainsKey(cart.CustomerId)
+                            ? customerNames[cart.CustomerId]
+                            : "No disponible")
+                    </td>
+                    <td>@cart.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@cart.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+
+                    <td>
+                        <a class="btn btn-warning btn-sm"
+                           href="@Url.Action("Index", "ShoppingCarts",
+                               new { mode = "edit", id = cart.Id })">
+                            Editar
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-danger btn-sm"
+                           href="@Url.Action("Index", "ShoppingCarts",
+                               new { mode = "delete", id = cart.Id })">
+                            Eliminar
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-info btn-sm"
+                           href="@Url.Action("Index", "ShoppingCarts",
+                               new { mode = "details", id = cart.Id })">
+                            Detalle
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Todavía no hay carritos registrados.</p>
+}

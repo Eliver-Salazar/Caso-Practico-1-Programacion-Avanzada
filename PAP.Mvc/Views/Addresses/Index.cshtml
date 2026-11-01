@@ -1,0 +1,296 @@
+﻿@using System.Linq
+@using System.Collections.Generic
+@model IEnumerable<PAP.DataAccess.Address>
+
+@{
+    ViewBag.Title = "Direcciones";
+
+    // Obtiene la operación, el registro y los nombres de los clientes.
+    string mode = ViewBag.Mode as string ?? "";
+    var selected = ViewBag.SelectedAddress as PAP.DataAccess.Address;
+    var customerNames =
+        (Dictionary<int, string>)ViewBag.CustomerNames;
+}
+
+@* Encabezado y botón de agregar a la derecha. *@
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Direcciones</h2>
+
+    <a class="btn btn-primary"
+       href="@Url.Action("Index", "Addresses", new { mode = "create" })">
+        Agregar dirección
+    </a>
+</div>
+
+@* Mensajes de resultado. *@
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+@* Avisa cuando todavía no existen clientes para asociar. *@
+@if (customerNames.Count == 0)
+{
+    <div class="alert alert-info">
+        Primero registrá un cliente desde el menú Clientes.
+    </div>
+}
+
+@* Crear y editar comparten el formulario dentro de Index. *@
+@if (mode == "create" || mode == "edit")
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            @(mode == "create" ? "Agregar dirección" : "Editar dirección")
+        </div>
+
+        <div class="card-body">
+            @using (Html.BeginForm("Save", "Addresses", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+                <input type="hidden" name="Id" value="@selected.Id" />
+
+                <div class="mb-3">
+                    <label for="CustomerId">Cliente</label>
+                    @Html.DropDownList(
+                        "CustomerId",
+                        (SelectList)ViewBag.CustomerOptions,
+                        "Seleccioná un cliente",
+                        new
+                        {
+                            @class = "form-select",
+                            required = "required"
+                        })
+                </div>
+
+                <div class="mb-3">
+                    <label for="AddressType">Tipo de dirección</label>
+                    @Html.DropDownList(
+                        "AddressType",
+                        new SelectList(
+                            new[]
+                            {
+                                new { Value = "Shipping", Text = "Envío" },
+                                new { Value = "Billing", Text = "Facturación" }
+                            },
+                            "Value",
+                            "Text",
+                            selected.AddressType),
+                        new { @class = "form-select" })
+                </div>
+
+                <div class="mb-3">
+                    <label for="Street">Calle / dirección exacta</label>
+                    @Html.TextBox("Street", selected.Street, new
+                    {
+                        @class = "form-control",
+                        maxlength = "200",
+                        required = "required"
+                    })
+                </div>
+
+                <div class="mb-3">
+                    <label for="City">Ciudad</label>
+                    @Html.TextBox("City", selected.City, new
+                    {
+                        @class = "form-control",
+                        maxlength = "100",
+                        required = "required"
+                    })
+                </div>
+
+                <div class="mb-3">
+                    <label for="State">Provincia / estado</label>
+                    @Html.TextBox("State", selected.State, new
+                    {
+                        @class = "form-control",
+                        maxlength = "100"
+                    })
+                </div>
+
+                <div class="mb-3">
+                    <label for="PostalCode">Código postal</label>
+                    @Html.TextBox("PostalCode", selected.PostalCode, new
+                    {
+                        @class = "form-control",
+                        maxlength = "20",
+                        required = "required"
+                    })
+                </div>
+
+                <div class="mb-3">
+                    <label for="Country">País</label>
+                    @Html.TextBox("Country", selected.Country, new
+                    {
+                        @class = "form-control",
+                        maxlength = "100",
+                        required = "required"
+                    })
+                </div>
+
+                <div class="form-check mb-3">
+                    @Html.CheckBox("IsDefault", selected.IsDefault,
+                        new { @class = "form-check-input" })
+                    <label for="IsDefault" class="form-check-label">
+                        Dirección predeterminada
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-success">Guardar</button>
+                <a class="btn btn-secondary"
+                   href="@Url.Action("Index", "Addresses")">
+                    Cancelar
+                </a>
+            }
+        </div>
+    </div>
+}
+
+@* Detalle completo de la dirección y su cliente asociado. *@
+@if (mode == "details")
+{
+    <div class="card mb-4">
+        <div class="card-header">Detalle de la dirección</div>
+
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@selected.Id</dd>
+
+                <dt class="col-sm-3">ID del cliente</dt>
+                <dd class="col-sm-9">@selected.CustomerId</dd>
+
+                <dt class="col-sm-3">Cliente</dt>
+                <dd class="col-sm-9">
+                    @(customerNames.ContainsKey(selected.CustomerId)
+                        ? customerNames[selected.CustomerId]
+                        : "No disponible")
+                </dd>
+
+                <dt class="col-sm-3">Tipo</dt>
+                <dd class="col-sm-9">
+                    @(selected.AddressType == "Shipping" ? "Envío" :
+                      selected.AddressType == "Billing" ? "Facturación" :
+                      selected.AddressType)
+                </dd>
+
+                <dt class="col-sm-3">Dirección exacta</dt>
+                <dd class="col-sm-9">@selected.Street</dd>
+
+                <dt class="col-sm-3">Ciudad</dt>
+                <dd class="col-sm-9">@selected.City</dd>
+
+                <dt class="col-sm-3">Provincia / estado</dt>
+                <dd class="col-sm-9">@selected.State</dd>
+
+                <dt class="col-sm-3">Código postal</dt>
+                <dd class="col-sm-9">@selected.PostalCode</dd>
+
+                <dt class="col-sm-3">País</dt>
+                <dd class="col-sm-9">@selected.Country</dd>
+
+                <dt class="col-sm-3">Predeterminada</dt>
+                <dd class="col-sm-9">@(selected.IsDefault ? "Sí" : "No")</dd>
+            </dl>
+
+            <a class="btn btn-secondary"
+               href="@Url.Action("Index", "Addresses")">
+                Volver
+            </a>
+        </div>
+    </div>
+}
+
+@* Confirmación antes de eliminar. *@
+@if (mode == "delete")
+{
+    <div class="alert alert-warning">
+        <p>¿Eliminar la dirección <strong>@selected.Street</strong>?</p>
+
+        @using (Html.BeginForm("Delete", "Addresses", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@selected.Id" />
+
+            <button type="submit" class="btn btn-danger">
+                Confirmar eliminación
+            </button>
+            <a class="btn btn-secondary"
+               href="@Url.Action("Index", "Addresses")">
+                Cancelar
+            </a>
+        }
+    </div>
+}
+
+@* Listado con nombres de clientes y acciones a la derecha. *@
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Tipo</th>
+                <th>Dirección</th>
+                <th>Ciudad</th>
+                <th>Predeterminada</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+                <th>Detalle</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var address in Model)
+            {
+                <tr>
+                    <td>@address.Id</td>
+                    <td>
+                        @(customerNames.ContainsKey(address.CustomerId)
+                            ? customerNames[address.CustomerId]
+                            : "No disponible")
+                    </td>
+                    <td>
+                        @(address.AddressType == "Shipping" ? "Envío" :
+                          address.AddressType == "Billing" ? "Facturación" :
+                          address.AddressType)
+                    </td>
+                    <td>@address.Street</td>
+                    <td>@address.City</td>
+                    <td>@(address.IsDefault ? "Sí" : "No")</td>
+                    <td>
+                        <a class="btn btn-warning btn-sm"
+                           href="@Url.Action("Index", "Addresses",
+                               new { mode = "edit", id = address.Id })">
+                            Editar
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-danger btn-sm"
+                           href="@Url.Action("Index", "Addresses",
+                               new { mode = "delete", id = address.Id })">
+                            Eliminar
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-info btn-sm"
+                           href="@Url.Action("Index", "Addresses",
+                               new { mode = "details", id = address.Id })">
+                            Detalle
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Todavía no hay direcciones registradas.</p>
+}

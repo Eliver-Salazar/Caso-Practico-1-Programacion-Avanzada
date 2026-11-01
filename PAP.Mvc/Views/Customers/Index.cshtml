@@ -1,0 +1,265 @@
+﻿@using System.Linq
+@model IEnumerable<PAP.DataAccess.Customer>
+
+@{
+    ViewBag.Title = "Clientes";
+
+    // Recupera la operación y el cliente seleccionado.
+    string mode = ViewBag.Mode as string ?? "";
+    var selected = ViewBag.SelectedCustomer as PAP.DataAccess.Customer;
+}
+
+@* Encabezado y botón de agregar a la derecha. *@
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Clientes</h2>
+    <a class="btn btn-primary"
+       href="@Url.Action("Index", "Customers", new { mode = "create" })">
+        Agregar cliente
+    </a>
+</div>
+
+@* Mensajes después de guardar o eliminar. *@
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+@* Formulario compartido para crear y editar. *@
+@if (mode == "create" || mode == "edit")
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            @(mode == "create" ? "Agregar cliente" : "Editar cliente")
+        </div>
+        <div class="card-body">
+            @using (Html.BeginForm("Save", "Customers", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+                <input type="hidden" name="Id" value="@selected.Id" />
+
+                <div class="mb-3">
+                    <label for="FirstName">Nombre</label>
+                    @Html.TextBox("FirstName", selected.FirstName, new
+                    {
+                        @class = "form-control",
+                        maxlength = "100",
+                        required = "required"
+                    })
+                </div>
+
+                <div class="mb-3">
+                    <label for="LastName">Apellido</label>
+                    @Html.TextBox("LastName", selected.LastName, new
+                    {
+                        @class = "form-control",
+                        maxlength = "100",
+                        required = "required"
+                    })
+                </div>
+
+                <div class="mb-3">
+                    <label for="Email">Correo</label>
+                    @Html.TextBox("Email", selected.Email, new
+                    {
+                        @class = "form-control",
+                        type = "email",
+                        maxlength = "150",
+                        required = "required"
+                    })
+                </div>
+
+                @* Nunca se carga la contraseña anterior en el formulario. *@
+                <div class="mb-3">
+                    <label for="password">Contraseña</label>
+                    <input type="password"
+                           id="password"
+                           name="password"
+                           class="form-control"
+                           minlength="8"
+                           maxlength="128"
+                           autocomplete="new-password" />
+                    <small class="text-muted">
+                        @(mode == "create"
+                            ? "Obligatoria: mínimo 8 caracteres."
+                            : "Dejala vacía para conservar la actual.")
+                    </small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="Phone">Teléfono</label>
+                    @Html.TextBox("Phone", selected.Phone, new
+                    {
+                        @class = "form-control",
+                        type = "tel",
+                        maxlength = "30"
+                    })
+                </div>
+
+                <div class="mb-3">
+                    <label for="BirthDate">Fecha de nacimiento</label>
+                    @Html.TextBox(
+                        "BirthDate",
+                        selected.BirthDate.HasValue
+                            ? selected.BirthDate.Value.ToString("yyyy-MM-dd")
+                            : "",
+                        new { @class = "form-control", type = "date" })
+                </div>
+
+                <div class="form-check mb-3">
+                    @Html.CheckBox("IsActive", selected.IsActive,
+                        new { @class = "form-check-input" })
+                    <label for="IsActive" class="form-check-label">Activo</label>
+                </div>
+
+                <button type="submit" class="btn btn-success">Guardar</button>
+                <a class="btn btn-secondary"
+                   href="@Url.Action("Index", "Customers")">
+                    Cancelar
+                </a>
+            }
+        </div>
+    </div>
+}
+
+@* Detalle de los campos; el hash de contraseña se mantiene protegido. *@
+@if (mode == "details")
+{
+    <div class="card mb-4">
+        <div class="card-header">Detalle del cliente</div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@selected.Id</dd>
+
+                <dt class="col-sm-3">Nombre</dt>
+                <dd class="col-sm-9">@selected.FirstName</dd>
+
+                <dt class="col-sm-3">Apellido</dt>
+                <dd class="col-sm-9">@selected.LastName</dd>
+
+                <dt class="col-sm-3">Correo</dt>
+                <dd class="col-sm-9">@selected.Email</dd>
+
+                <dt class="col-sm-3">Teléfono</dt>
+                <dd class="col-sm-9">@selected.Phone</dd>
+
+                <dt class="col-sm-3">Nacimiento</dt>
+                <dd class="col-sm-9">
+                    @(selected.BirthDate.HasValue
+                        ? selected.BirthDate.Value.ToString("dd/MM/yyyy")
+                        : "Sin registrar")
+                </dd>
+
+                <dt class="col-sm-3">Estado</dt>
+                <dd class="col-sm-9">
+                    @(selected.IsActive ? "Activo" : "Inactivo")
+                </dd>
+
+                <dt class="col-sm-3">Contraseña</dt>
+                <dd class="col-sm-9">Protegida mediante hash</dd>
+
+                <dt class="col-sm-3">Creación (UTC)</dt>
+                <dd class="col-sm-9">
+                    @selected.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                </dd>
+
+                <dt class="col-sm-3">Actualización (UTC)</dt>
+                <dd class="col-sm-9">
+                    @selected.UpdatedAt.ToString("dd/MM/yyyy HH:mm")
+                </dd>
+            </dl>
+
+            <a class="btn btn-secondary"
+               href="@Url.Action("Index", "Customers")">
+                Volver
+            </a>
+        </div>
+    </div>
+}
+
+@* Confirmación antes de eliminar. *@
+@if (mode == "delete")
+{
+    <div class="alert alert-warning">
+        <p>
+            ¿Eliminar a
+            <strong>@selected.FirstName @selected.LastName</strong>?
+        </p>
+
+        @using (Html.BeginForm("Delete", "Customers", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@selected.Id" />
+
+            <button type="submit" class="btn btn-danger">
+                Confirmar eliminación
+            </button>
+            <a class="btn btn-secondary"
+               href="@Url.Action("Index", "Customers")">
+                Cancelar
+            </a>
+        }
+    </div>
+}
+
+@* Listado con los principales datos y las acciones a la derecha. *@
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Correo</th>
+                <th>Estado</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+                <th>Detalle</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var customer in Model)
+            {
+                <tr>
+                    <td>@customer.Id</td>
+                    <td>@customer.FirstName</td>
+                    <td>@customer.LastName</td>
+                    <td>@customer.Email</td>
+                    <td>@(customer.IsActive ? "Activo" : "Inactivo")</td>
+                    <td>
+                        <a class="btn btn-warning btn-sm"
+                           href="@Url.Action("Index", "Customers",
+                               new { mode = "edit", id = customer.Id })">
+                            Editar
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-danger btn-sm"
+                           href="@Url.Action("Index", "Customers",
+                               new { mode = "delete", id = customer.Id })">
+                            Eliminar
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-info btn-sm"
+                           href="@Url.Action("Index", "Customers",
+                               new { mode = "details", id = customer.Id })">
+                            Detalle
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Todavía no hay clientes registrados.</p>
+}

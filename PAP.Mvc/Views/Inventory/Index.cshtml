@@ -1,0 +1,255 @@
+﻿@using System.Linq
+@using System.Collections.Generic
+@model IEnumerable<PAP.DataAccess.Inventory>
+
+@{
+    ViewBag.Title = "Inventario";
+
+    // Obtiene la operación, el registro y los nombres de libros.
+    string mode = ViewBag.Mode as string ?? "";
+    var selected = ViewBag.SelectedInventory as PAP.DataAccess.Inventory;
+    var bookNames = (Dictionary<int, string>)ViewBag.BookNames;
+}
+
+@* Encabezado con el botón de agregar a la derecha. *@
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Inventario</h2>
+
+    <a class="btn btn-primary"
+       href="@Url.Action("Index", "Inventory", new { mode = "create" })">
+        Agregar inventario
+    </a>
+</div>
+
+@* Mensajes del resultado de las operaciones. *@
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+@if (bookNames.Count == 0)
+{
+    <div class="alert alert-info">
+        Primero debe existir un libro para registrar su inventario.
+    </div>
+}
+
+@* Formulario compartido para crear y editar. *@
+@if (mode == "create" || mode == "edit")
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            @(mode == "create" ? "Agregar inventario" : "Editar inventario")
+        </div>
+
+        <div class="card-body">
+            @using (Html.BeginForm("Save", "Inventory", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+                <input type="hidden" name="Id" value="@selected.Id" />
+
+                <div class="mb-3">
+                    <label for="BookId">Libro</label>
+                    @Html.DropDownList(
+                        "BookId",
+                        (SelectList)ViewBag.BookOptions,
+                        "Seleccioná un libro",
+                        new
+                        {
+                            @class = "form-select",
+                            required = "required"
+                        })
+                </div>
+
+                <div class="mb-3">
+                    <label for="QuantityInStock">Existencias</label>
+                    @Html.TextBox("QuantityInStock", selected.QuantityInStock,
+                        new
+                        {
+                            @class = "form-control",
+                            type = "number",
+                            min = "0",
+                            step = "1",
+                            required = "required"
+                        })
+                </div>
+
+                <div class="mb-3">
+                    <label for="ReorderLevel">Nivel de reposición</label>
+                    @Html.TextBox("ReorderLevel", selected.ReorderLevel,
+                        new
+                        {
+                            @class = "form-control",
+                            type = "number",
+                            min = "0",
+                            step = "1",
+                            required = "required"
+                        })
+                    <small class="text-muted">
+                        Se avisa cuando las existencias son iguales o inferiores.
+                    </small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="LastRestockedAt">Última reposición</label>
+                    @Html.TextBox(
+                        "LastRestockedAt",
+                        selected.LastRestockedAt.HasValue
+                            ? selected.LastRestockedAt.Value.ToString("yyyy-MM-dd")
+                            : "",
+                        new { @class = "form-control", type = "date" })
+                </div>
+
+                <button type="submit" class="btn btn-success">Guardar</button>
+                <a class="btn btn-secondary"
+                   href="@Url.Action("Index", "Inventory")">
+                    Cancelar
+                </a>
+            }
+        </div>
+    </div>
+}
+
+@* Detalle completo del registro de inventario. *@
+@if (mode == "details")
+{
+    <div class="card mb-4">
+        <div class="card-header">Detalle del inventario</div>
+
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@selected.Id</dd>
+
+                <dt class="col-sm-3">ID del libro</dt>
+                <dd class="col-sm-9">@selected.BookId</dd>
+
+                <dt class="col-sm-3">Libro</dt>
+                <dd class="col-sm-9">
+                    @(bookNames.ContainsKey(selected.BookId)
+                        ? bookNames[selected.BookId]
+                        : "No disponible")
+                </dd>
+
+                <dt class="col-sm-3">Existencias</dt>
+                <dd class="col-sm-9">@selected.QuantityInStock</dd>
+
+                <dt class="col-sm-3">Nivel de reposición</dt>
+                <dd class="col-sm-9">@selected.ReorderLevel</dd>
+
+                <dt class="col-sm-3">Última reposición</dt>
+                <dd class="col-sm-9">
+                    @(selected.LastRestockedAt.HasValue
+                        ? selected.LastRestockedAt.Value.ToString("dd/MM/yyyy")
+                        : "Sin registrar")
+                </dd>
+            </dl>
+
+            <a class="btn btn-secondary"
+               href="@Url.Action("Index", "Inventory")">
+                Volver
+            </a>
+        </div>
+    </div>
+}
+
+@* Confirmación antes de eliminar solo el registro de inventario. *@
+@if (mode == "delete")
+{
+    <div class="alert alert-warning">
+        <p>¿Eliminar el registro de inventario <strong>#@selected.Id</strong>?</p>
+
+        @using (Html.BeginForm("Delete", "Inventory", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@selected.Id" />
+
+            <button type="submit" class="btn btn-danger">
+                Confirmar eliminación
+            </button>
+            <a class="btn btn-secondary"
+               href="@Url.Action("Index", "Inventory")">
+                Cancelar
+            </a>
+        }
+    </div>
+}
+
+@* Resalta los registros que necesitan reposición. *@
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Libro</th>
+                <th>Existencias</th>
+                <th>Nivel de reposición</th>
+                <th>Estado</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+                <th>Detalle</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>
+                        @(bookNames.ContainsKey(item.BookId)
+                            ? bookNames[item.BookId]
+                            : "No disponible")
+                    </td>
+                    <td>@item.QuantityInStock</td>
+                    <td>@item.ReorderLevel</td>
+                    <td>
+                        @if (item.QuantityInStock <= item.ReorderLevel)
+                        {
+                            <span class="badge bg-warning text-dark">
+                                Reponer
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">Disponible</span>
+                        }
+                    </td>
+
+                    <td>
+                        <a class="btn btn-warning btn-sm"
+                           href="@Url.Action("Index", "Inventory",
+                               new { mode = "edit", id = item.Id })">
+                            Editar
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-danger btn-sm"
+                           href="@Url.Action("Index", "Inventory",
+                               new { mode = "delete", id = item.Id })">
+                            Eliminar
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-info btn-sm"
+                           href="@Url.Action("Index", "Inventory",
+                               new { mode = "details", id = item.Id })">
+                            Detalle
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Todavía no hay inventario registrado.</p>
+}

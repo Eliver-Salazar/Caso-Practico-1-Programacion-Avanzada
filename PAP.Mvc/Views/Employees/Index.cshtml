@@ -1,0 +1,275 @@
+﻿@using System.Linq
+@using System.Collections.Generic
+@model IEnumerable<PAP.DataAccess.Employee>
+
+@{
+    ViewBag.Title = "Empleados";
+
+    // Obtiene la operación, el empleado y los nombres de los roles.
+    string mode = ViewBag.Mode as string ?? "";
+    var selected = ViewBag.SelectedEmployee as PAP.DataAccess.Employee;
+    var roleNames = (Dictionary<int, string>)ViewBag.RoleNames;
+}
+
+@* Encabezado con el botón de agregar a la derecha. *@
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Empleados</h2>
+
+    <a class="btn btn-primary"
+       href="@Url.Action("Index", "Employees", new { mode = "create" })">
+        Agregar empleado
+    </a>
+</div>
+
+@* Mensajes del resultado de las operaciones. *@
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+@if (roleNames.Count == 0)
+{
+    <div class="alert alert-info">
+        Primero registrá un rol desde el menú Roles.
+    </div>
+}
+
+@* Formulario compartido para crear y editar. *@
+@if (mode == "create" || mode == "edit")
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            @(mode == "create" ? "Agregar empleado" : "Editar empleado")
+        </div>
+
+        <div class="card-body">
+            @using (Html.BeginForm("Save", "Employees", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+                <input type="hidden" name="Id" value="@selected.Id" />
+
+                <div class="mb-3">
+                    <label for="RoleId">Rol</label>
+                    @Html.DropDownList(
+                        "RoleId",
+                        (SelectList)ViewBag.RoleOptions,
+                        "Seleccioná un rol",
+                        new
+                        {
+                            @class = "form-select",
+                            required = "required"
+                        })
+                </div>
+
+                <div class="mb-3">
+                    <label for="FirstName">Nombre</label>
+                    @Html.TextBox("FirstName", selected.FirstName, new
+                    {
+                        @class = "form-control",
+                        maxlength = "100",
+                        required = "required"
+                    })
+                </div>
+
+                <div class="mb-3">
+                    <label for="LastName">Apellido</label>
+                    @Html.TextBox("LastName", selected.LastName, new
+                    {
+                        @class = "form-control",
+                        maxlength = "100",
+                        required = "required"
+                    })
+                </div>
+
+                <div class="mb-3">
+                    <label for="Email">Correo</label>
+                    @Html.TextBox("Email", selected.Email, new
+                    {
+                        @class = "form-control",
+                        type = "email",
+                        maxlength = "150",
+                        required = "required"
+                    })
+                </div>
+
+                @* Nunca muestra ni precarga la contraseña anterior. *@
+                <div class="mb-3">
+                    <label for="password">Contraseña</label>
+                    <input type="password"
+                           id="password"
+                           name="password"
+                           class="form-control"
+                           minlength="8"
+                           maxlength="128"
+                           autocomplete="new-password" />
+
+                    <small class="text-muted">
+                        @(mode == "create"
+                            ? "Obligatoria: mínimo 8 caracteres."
+                            : "Dejala vacía para conservar la actual.")
+                    </small>
+                </div>
+
+                <div class="form-check mb-3">
+                    @Html.CheckBox("IsActive", selected.IsActive,
+                        new { @class = "form-check-input" })
+                    <label for="IsActive" class="form-check-label">
+                        Activo
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-success">Guardar</button>
+                <a class="btn btn-secondary"
+                   href="@Url.Action("Index", "Employees")">
+                    Cancelar
+                </a>
+            }
+        </div>
+    </div>
+}
+
+@* Detalle del empleado; el hash de contraseña permanece protegido. *@
+@if (mode == "details")
+{
+    <div class="card mb-4">
+        <div class="card-header">Detalle del empleado</div>
+
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@selected.Id</dd>
+
+                <dt class="col-sm-3">ID del rol</dt>
+                <dd class="col-sm-9">@selected.RoleId</dd>
+
+                <dt class="col-sm-3">Rol</dt>
+                <dd class="col-sm-9">
+                    @(roleNames.ContainsKey(selected.RoleId)
+                        ? roleNames[selected.RoleId]
+                        : "No disponible")
+                </dd>
+
+                <dt class="col-sm-3">Nombre</dt>
+                <dd class="col-sm-9">@selected.FirstName</dd>
+
+                <dt class="col-sm-3">Apellido</dt>
+                <dd class="col-sm-9">@selected.LastName</dd>
+
+                <dt class="col-sm-3">Correo</dt>
+                <dd class="col-sm-9">@selected.Email</dd>
+
+                <dt class="col-sm-3">Contraseña</dt>
+                <dd class="col-sm-9">Protegida mediante hash</dd>
+
+                <dt class="col-sm-3">Estado</dt>
+                <dd class="col-sm-9">
+                    @(selected.IsActive ? "Activo" : "Inactivo")
+                </dd>
+
+                <dt class="col-sm-3">Creación (UTC)</dt>
+                <dd class="col-sm-9">
+                    @selected.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                </dd>
+            </dl>
+
+            <a class="btn btn-secondary"
+               href="@Url.Action("Index", "Employees")">
+                Volver
+            </a>
+        </div>
+    </div>
+}
+
+@* Confirmación antes de eliminar el registro. *@
+@if (mode == "delete")
+{
+    <div class="alert alert-warning">
+        <p>
+            ¿Eliminar a
+            <strong>@selected.FirstName @selected.LastName</strong>?
+        </p>
+
+        @using (Html.BeginForm("Delete", "Employees", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@selected.Id" />
+
+            <button type="submit" class="btn btn-danger">
+                Confirmar eliminación
+            </button>
+            <a class="btn btn-secondary"
+               href="@Url.Action("Index", "Employees")">
+                Cancelar
+            </a>
+        }
+    </div>
+}
+
+@* Listado con el nombre del rol y las acciones a la derecha. *@
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Correo</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+                <th>Detalle</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var employee in Model)
+            {
+                <tr>
+                    <td>@employee.Id</td>
+                    <td>@employee.FirstName</td>
+                    <td>@employee.LastName</td>
+                    <td>@employee.Email</td>
+                    <td>
+                        @(roleNames.ContainsKey(employee.RoleId)
+                            ? roleNames[employee.RoleId]
+                            : "No disponible")
+                    </td>
+                    <td>@(employee.IsActive ? "Activo" : "Inactivo")</td>
+
+                    <td>
+                        <a class="btn btn-warning btn-sm"
+                           href="@Url.Action("Index", "Employees",
+                               new { mode = "edit", id = employee.Id })">
+                            Editar
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-danger btn-sm"
+                           href="@Url.Action("Index", "Employees",
+                               new { mode = "delete", id = employee.Id })">
+                            Eliminar
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-info btn-sm"
+                           href="@Url.Action("Index", "Employees",
+                               new { mode = "details", id = employee.Id })">
+                            Detalle
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Todavía no hay empleados registrados.</p>
+}
