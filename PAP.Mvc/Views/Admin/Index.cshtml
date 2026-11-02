@@ -1,0 +1,79 @@
+﻿@model IEnumerable<PAP.Generators.GeneratorStatus>
+
+@{
+    ViewBag.Title = "Admin";
+}
+
+@* Encabezado de la pantalla de generación. *@
+<h2>Generación de datos</h2>
+<p class="text-muted">
+    Cada entidad puede generarse únicamente cuando su tabla está vacía
+    y se cumplen sus dependencias.
+</p>
+
+@* Mensajes después de intentar generar. *@
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success" role="alert">
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @TempData["Error"]
+    </div>
+}
+
+@* Entidad a la izquierda y botón de generación a la derecha. *@
+<div class="table-responsive">
+    <table class="table table-striped table-bordered align-middle">
+        <thead>
+            <tr>
+                <th>Entidad</th>
+                <th>Estado</th>
+                <th class="text-end">Generar</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var status in Model)
+            {
+                <tr>
+                    <td>dbo.@status.EntityName</td>
+                    <td>@status.Message</td>
+                    <td class="text-end">
+                        @using (Html.BeginForm(
+                            "Generate", "Admin", FormMethod.Post,
+                            new { @class = "m-0" }))
+                        {
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="entityName"
+                                   value="@status.EntityName" />
+
+                            @* No emite el atributo disabled cuando está disponible. *@
+                            if (status.CanGenerate)
+                            {
+                                <button type="submit" class="btn btn-primary">
+                                    Generar
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="submit"
+                                        class="btn btn-secondary"
+                                        disabled
+                                        title="@status.Message">
+                                    Generar
+                                </button>
+                            }
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

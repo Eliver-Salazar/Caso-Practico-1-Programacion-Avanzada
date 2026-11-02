@@ -128,6 +128,7 @@
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\AddressesController.cs" />
+    <Compile Include="Controllers\AdminController.cs" />
     <Compile Include="Controllers\AuthorsController.cs" />
     <Compile Include="Controllers\BookAuthorsController.cs" />
     <Compile Include="Controllers\CartItemsController.cs" />
@@ -230,6 +231,7 @@
     <Content Include="Views\OrderItems\Index.cshtml" />
     <Content Include="Views\Payments\Index.cshtml" />
     <Content Include="Views\BookAuthors\Index.cshtml" />
+    <Content Include="Views\Admin\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -270,6 +272,10 @@
     <ProjectReference Include="..\PAP.DataAccess\PAP.DataAccess.csproj">
       <Project>{b9b34359-9d35-4cb6-b78a-4534016230e5}</Project>
       <Name>PAP.DataAccess</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PAP.Generators\PAP.Generators.csproj">
+      <Project>{b388f224-ce3f-4b5f-93e6-57bd843b888f}</Project>
+      <Name>PAP.Generators</Name>
     </ProjectReference>
     <ProjectReference Include="..\PAP.Models\PAP.Models.csproj">
       <Project>{FD2A49BA-12B1-4B7D-B59F-5BA8CA98749B}</Project>

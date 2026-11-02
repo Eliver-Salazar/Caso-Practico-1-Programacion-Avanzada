@@ -105,6 +105,15 @@
                             new { area = "" },
                             new { @class = "nav-link" })
                     </li>
+                    @* Acceso directo a la generación de datos del caso práctico. *@
+                    <li class="nav-item">
+                        @Html.ActionLink(
+                            "Admin",
+                            "Index",
+                            "Admin",
+                            null,
+                            new { @class = "nav-link" })
+                    </li>
 
                     @* Libros y sus catálogos relacionados. *@
                     <li class="nav-item dropdown">
