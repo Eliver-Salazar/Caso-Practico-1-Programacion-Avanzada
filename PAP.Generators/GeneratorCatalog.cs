@@ -1,21 +1,38 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PAP.Generators
 {
     public class GeneratorCatalog
     {
-        // Registra los generadores disponibles.
+        // Registra los generadores de las veinte tablas del caso.
         private readonly Dictionary<string, IGenerator> _generators =
             new Dictionary<string, IGenerator>(StringComparer.OrdinalIgnoreCase)
             {
-                { "Authors", new AuthorsGenerator() }
+                { "Authors", new AuthorsGenerator() },
+                { "Categories", new CategoriesGenerator() },
+                { "Genres", new GenresGenerator() },
+                { "Roles", new RolesGenerator() },
+                { "Publishers", new PublishersGenerator() },
+                { "Suppliers", new SuppliersGenerator() },
+                { "Customers", new CustomersGenerator() },
+                { "Employees", new EmployeesGenerator() },
+                { "Addresses", new AddressesGenerator() },
+                { "ShoppingCarts", new ShoppingCartsGenerator() },
+                { "PurchaseOrders", new PurchaseOrdersGenerator() },
+                { "Books", new BooksGenerator() },
+                { "Inventory", new InventoryGenerator() },
+                { "BookAuthors", new BookAuthorsGenerator() },
+                { "Reviews", new ReviewsGenerator() },
+                { "CartItems", new CartItemsGenerator() },
+                { "PurchaseOrderItems", new PurchaseOrderItemsGenerator() },
+                { "Orders", new OrdersGenerator() },
+                { "OrderItems", new OrderItemsGenerator() },
+                { "Payments", new PaymentsGenerator() }
             };
 
-        // Consulta el estado de cada entidad para construir la pantalla.
+        // Consulta los estados actuales de todas las entidades.
         public IEnumerable<GeneratorStatus> GetStatuses()
         {
             return _generators.Values
@@ -24,7 +41,7 @@ namespace PAP.Generators
                 .ToList();
         }
 
-        // Valida la entidad y sus condiciones antes de generar.
+        // Valida las condiciones desde el servidor antes de generar.
         public int Generate(string entityName)
         {
             IGenerator generator;
@@ -41,7 +58,6 @@ namespace PAP.Generators
             if (!status.CanGenerate)
                 throw new InvalidOperationException(status.Message);
 
-            // El generador también comprueba sus condiciones internamente.
             return generator.Generate();
         }
     }
