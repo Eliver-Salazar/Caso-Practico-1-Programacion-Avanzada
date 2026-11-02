@@ -129,6 +129,7 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\AddressesController.cs" />
     <Compile Include="Controllers\AuthorsController.cs" />
+    <Compile Include="Controllers\BookAuthorsController.cs" />
     <Compile Include="Controllers\CartItemsController.cs" />
     <Compile Include="Controllers\CategoriesController.cs" />
     <Compile Include="Controllers\CustomersController.cs" />
@@ -137,7 +138,12 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\InventoryController.cs" />
     <Compile Include="Controllers\LibraryController.cs" />
+    <Compile Include="Controllers\OrderItemsController.cs" />
+    <Compile Include="Controllers\OrdersController.cs" />
+    <Compile Include="Controllers\PaymentsController.cs" />
     <Compile Include="Controllers\PublishersController.cs" />
+    <Compile Include="Controllers\PurchaseOrderItemsController.cs" />
+    <Compile Include="Controllers\PurchaseOrdersController.cs" />
     <Compile Include="Controllers\ReviewsController.cs" />
     <Compile Include="Controllers\RolesController.cs" />
     <Compile Include="Controllers\ShoppingCartsController.cs" />
@@ -218,6 +224,12 @@
     <Content Include="Views\Inventory\Index.cshtml" />
     <Content Include="Views\CartItems\Index.cshtml" />
     <Content Include="Views\Reviews\Index.cshtml" />
+    <Content Include="Views\PurchaseOrders\Index.cshtml" />
+    <Content Include="Views\PurchaseOrderItems\Index.cshtml" />
+    <Content Include="Views\Orders\Index.cshtml" />
+    <Content Include="Views\OrderItems\Index.cshtml" />
+    <Content Include="Views\Payments\Index.cshtml" />
+    <Content Include="Views\BookAuthors\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

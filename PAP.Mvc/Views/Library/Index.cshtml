@@ -1,65 +1,393 @@
-﻿@*
-    Ejemplo: Strongly Typed Views (vistas tipadas)
-    @model declara el tipo del modelo; la vista usa Model con tipado fuerte.
-*@
+﻿@using System.Linq
+@using System.Collections.Generic
 @model IEnumerable<PAP.DataAccess.Book>
 
 @{
-    ViewBag.Title = "Books";
-    var books = Model?.ToList() ?? new List<PAP.DataAccess.Book>();
+    ViewBag.Title = "Libros";
+
+    // Recupera la operación y el libro seleccionado.
+    string mode = ViewBag.Mode as string ?? "";
+    var selected = ViewBag.SelectedBook as PAP.DataAccess.Book;
+    var categories = (Dictionary<int, string>)ViewBag.CategoryNames;
+    var genres = (Dictionary<int, string>)ViewBag.GenreNames;
+    var publishers = (Dictionary<int, string>)ViewBag.PublisherNames;
 }
 
-<main>
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h2 mb-1">Books</h1>
-            <p class="text-muted mb-0">@books.Count title@(books.Count == 1 ? "" : "s") in the catalog</p>
+@* Encabezado con el acceso a tarjetas y el botón de agregar. *@
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Libros</h2>
+    <div>
+        <a class="btn btn-outline-secondary"
+           href="@Url.Action("Catalog", "Library", new { vista = "cards" })">
+            Vista tarjetas
+        </a>
+        <a class="btn btn-primary"
+           href="@Url.Action("Index", "Library", new { mode = "create" })">
+            Agregar libro
+        </a>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+@* Crear y editar utilizan el mismo formulario dentro de Index. *@
+@if (mode == "create" || mode == "edit")
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            @(mode == "create" ? "Agregar libro" : "Editar libro")
         </div>
-        <div>
-            @Html.ActionLink("Vista cards", "Catalog", "Library", new { vista = "cards" }, new { @class = "btn btn-outline-dark btn-sm" })
-            @Html.ActionLink("Crear libro", "Create", "Library", null, new { @class = "btn btn-primary btn-sm" })
+
+        <div class="card-body">
+            @using (Html.BeginForm("Save", "Library", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+                <input type="hidden" name="Id" value="@selected.Id" />
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="Title">Título</label>
+                        @Html.TextBox("Title", selected.Title,
+                            new { @class = "form-control", required = "required" })
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="Name">Nombre interno</label>
+                        @Html.TextBox("Name", selected.Name,
+                            new { @class = "form-control" })
+                        <small class="text-muted">
+                            Si queda vacío, se utiliza el título.
+                        </small>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="Author">Autor (texto original)</label>
+                        @Html.TextBox("Author", selected.Author,
+                            new { @class = "form-control" })
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="ISBN">ISBN</label>
+                        @Html.TextBox("ISBN", selected.ISBN,
+                            new { @class = "form-control", maxlength = "20" })
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="CategoryId">Categoría</label>
+                        @Html.DropDownList(
+                            "CategoryId",
+                            (SelectList)ViewBag.CategoryOptions,
+                            "Sin categoría",
+                            new { @class = "form-select" })
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="GenreId">Género</label>
+                        @Html.DropDownList(
+                            "GenreId",
+                            (SelectList)ViewBag.GenreOptions,
+                            "Sin género",
+                            new { @class = "form-select" })
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="PublisherId">Editorial</label>
+                        @Html.DropDownList(
+                            "PublisherId",
+                            (SelectList)ViewBag.PublisherOptions,
+                            "Sin editorial",
+                            new { @class = "form-select" })
+                    </div>
+                </div>
+
+                @* Conserva los campos originales de texto del profesor. *@
+                <details class="mb-3">
+                    <summary>Textos originales de categoría, género y editorial</summary>
+                    <p class="text-muted">
+                        Si seleccionás un catálogo, su nombre reemplaza este texto.
+                        Estos campos permiten conservar libros anteriores.
+                    </p>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="Category">Categoría original</label>
+                            @Html.TextBox("Category", selected.Category,
+                                new { @class = "form-control" })
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="Genre">Género original</label>
+                            @Html.TextBox("Genre", selected.Genre,
+                                new { @class = "form-control" })
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="Publisher">Editorial original</label>
+                            @Html.TextBox("Publisher", selected.Publisher,
+                                new { @class = "form-control" })
+                        </div>
+                    </div>
+                </details>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="Price">Precio</label>
+                        @Html.TextBox("Price", selected.Price.ToString("F2"),
+                            new
+                            {
+                                @class = "form-control",
+                                inputmode = "decimal",
+                                required = "required"
+                            })
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="Pages">Páginas</label>
+                        @Html.TextBox("Pages", selected.Pages,
+                            new
+                            {
+                                @class = "form-control",
+                                type = "number",
+                                min = "1",
+                                step = "1"
+                            })
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="Language">Idioma</label>
+                        @Html.TextBox("Language", selected.Language,
+                            new { @class = "form-control", maxlength = "50" })
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="PublicationDate">Fecha de publicación</label>
+                        @Html.TextBox(
+                            "PublicationDate",
+                            selected.PublicationDate.HasValue
+                                ? selected.PublicationDate.Value.ToString("yyyy-MM-dd")
+                                : "",
+                            new { @class = "form-control", type = "date" })
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="Height">Altura</label>
+                        @Html.TextBox("Height", selected.Height,
+                            new { @class = "form-control", inputmode = "decimal" })
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="Width">Ancho</label>
+                        @Html.TextBox("Width", selected.Width,
+                            new { @class = "form-control", inputmode = "decimal" })
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="CoverImageUrl">URL de portada</label>
+                    @Html.TextBox("CoverImageUrl", selected.CoverImageUrl,
+                        new
+                        {
+                            @class = "form-control",
+                            type = "url",
+                            maxlength = "500"
+                        })
+                </div>
+
+                <div class="mb-3">
+                    <label for="Description">Descripción</label>
+                    @Html.TextArea("Description", selected.Description,
+                        new { @class = "form-control", rows = "4" })
+                </div>
+
+                <div class="form-check mb-2">
+                    @Html.CheckBox("IsBestSeller", selected.IsBestSeller,
+                        new { @class = "form-check-input" })
+                    <label for="IsBestSeller" class="form-check-label">
+                        Más vendido
+                    </label>
+                </div>
+
+                <div class="form-check mb-3">
+                    @Html.CheckBox("IsInStock", selected.IsInStock,
+                        new { @class = "form-check-input" })
+                    <label for="IsInStock" class="form-check-label">
+                        Disponible (indicador del libro)
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-success">Guardar</button>
+                <a class="btn btn-secondary"
+                   href="@Url.Action("Index", "Library")">
+                    Cancelar
+                </a>
+            }
         </div>
     </div>
+}
 
-    @if (TempData["Mensaje"] != null)
+@* Detalle de todos los campos escalares del libro. *@
+@if (mode == "details")
+{
+    // Cada fila representa una propiedad almacenada del libro.
+    var fields = new[]
     {
-        <div class="alert alert-info" role="alert">@TempData["Mensaje"]</div>
-    }
+        new { Label = "ID", Value = selected.Id.ToString() },
+        new { Label = "Nombre interno", Value = selected.Name },
+        new { Label = "Título", Value = selected.Title },
+        new { Label = "Autor (texto)", Value = selected.Author },
+        new { Label = "Descripción", Value = selected.Description },
+        new { Label = "Categoría (texto)", Value = selected.Category },
+        new { Label = "Editorial (texto)", Value = selected.Publisher },
+        new { Label = "Género (texto)", Value = selected.Genre },
+        new { Label = "ID de categoría", Value = selected.CategoryId.ToString() },
+        new { Label = "ID de género", Value = selected.GenreId.ToString() },
+        new { Label = "ID de editorial", Value = selected.PublisherId.ToString() },
+        new { Label = "ISBN", Value = selected.ISBN },
+        new { Label = "Páginas", Value = selected.Pages.ToString() },
+        new { Label = "Idioma", Value = selected.Language },
+        new { Label = "URL de portada", Value = selected.CoverImageUrl },
+        new { Label = "Precio", Value = selected.Price.ToString("N2") },
+        new { Label = "Altura", Value = selected.Height.ToString() },
+        new { Label = "Ancho", Value = selected.Width.ToString() },
+        new { Label = "Más vendido", Value = selected.IsBestSeller ? "Sí" : "No" },
+        new { Label = "Disponible", Value = selected.IsInStock ? "Sí" : "No" },
+        new {
+            Label = "Publicación",
+            Value = selected.PublicationDate.HasValue
+                ? selected.PublicationDate.Value.ToString("dd/MM/yyyy")
+                : ""
+        },
+        new {
+            Label = "Creación (UTC)",
+            Value = selected.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+        },
+        new {
+            Label = "Actualización (UTC)",
+            Value = selected.UpdatedAt.ToString("dd/MM/yyyy HH:mm")
+        }
+    };
 
-    @if (!books.Any())
-    {
-        <div class="alert alert-info" role="alert">
-            No books are available at this time.
-        </div>
-    }
-    else
-    {
-        @*
-            Ejemplo: Vistas con Bootstrap
-            table, table-striped, table-hover y badges de Bootstrap 5 dan formato profesional a la lista.
-        *@
-        <div class="table-responsive">
-            <table class="table table-striped table-hover align-middle">
-                <thead class="table-dark">
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Title</th>
-                        <th scope="col">Author</th>
-                        <th scope="col">Genre</th>
-                        <th scope="col">Category</th>
-                        <th scope="col">Publisher</th>
-                        <th scope="col">Published</th>
-                        <th scope="col" class="text-end">Price</th>
-                        <th scope="col">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var book in books)
-                    {
-                        @Html.Partial("_BookRow", book)
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
-</main>
+<div class="card mb-4">
+    <div class="card-header">Detalle del libro</div>
+    <div class="card-body">
+        <dl class="row">
+            @foreach (var field in fields)
+            {
+                <dt class="col-sm-3">@field.Label</dt>
+                <dd class="col-sm-9"
+                    style="white-space: pre-wrap; overflow-wrap: anywhere;">@(string.IsNullOrEmpty(field.Value) ? "Sin registrar" : field.Value)</dd>
+            }
+        </dl>
+
+        <a class="btn btn-secondary"
+           href="@Url.Action("Index", "Library")">
+            Volver
+        </a>
+    </div>
+</div>
+}
+
+@* Confirmación antes de eliminar. *@
+@if (mode == "delete")
+{
+    <div class="alert alert-warning">
+        <p>¿Eliminar el libro <strong>@selected.Title</strong>?</p>
+
+        @using (Html.BeginForm("Delete", "Library", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@selected.Id" />
+
+            <button type="submit" class="btn btn-danger">
+                Confirmar eliminación
+            </button>
+            <a class="btn btn-secondary"
+               href="@Url.Action("Index", "Library")">
+                Cancelar
+            </a>
+        }
+    </div>
+}
+
+@* Lista los datos principales con las acciones a la derecha. *@
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Título</th>
+                <th>Autor</th>
+                <th>Categoría</th>
+                <th>Género</th>
+                <th>Editorial</th>
+                <th>Precio</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+                <th>Detalle</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var book in Model)
+            {
+                <tr>
+                    <td>@book.Id</td>
+                    <td>@book.Title</td>
+                    <td>@book.Author</td>
+                    <td>
+                        @(book.CategoryId.HasValue &&
+                          categories.ContainsKey(book.CategoryId.Value)
+                            ? categories[book.CategoryId.Value]
+                            : book.Category)
+                    </td>
+                    <td>
+                        @(book.GenreId.HasValue &&
+                          genres.ContainsKey(book.GenreId.Value)
+                            ? genres[book.GenreId.Value]
+                            : book.Genre)
+                    </td>
+                    <td>
+                        @(book.PublisherId.HasValue &&
+                          publishers.ContainsKey(book.PublisherId.Value)
+                            ? publishers[book.PublisherId.Value]
+                            : book.Publisher)
+                    </td>
+                    <td>@book.Price.ToString("N2")</td>
+
+                    <td>
+                        <a class="btn btn-warning btn-sm"
+                           href="@Url.Action("Index", "Library",
+                               new { mode = "edit", id = book.Id })">
+                            Editar
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-danger btn-sm"
+                           href="@Url.Action("Index", "Library",
+                               new { mode = "delete", id = book.Id })">
+                            Eliminar
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-info btn-sm"
+                           href="@Url.Action("Index", "Library",
+                               new { mode = "details", id = book.Id })">
+                            Detalle
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Todavía no hay libros registrados.</p>
+}

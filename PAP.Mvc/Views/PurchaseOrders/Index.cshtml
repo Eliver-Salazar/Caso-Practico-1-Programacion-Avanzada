@@ -1,0 +1,245 @@
+﻿@using System.Linq
+@using System.Collections.Generic
+@model IEnumerable<PAP.DataAccess.PurchaseOrder>
+
+@{
+    ViewBag.Title = "Órdenes de compra";
+
+    // Recupera la operación y los datos relacionados.
+    string mode = ViewBag.Mode as string ?? "";
+    var selected = ViewBag.SelectedOrder as PAP.DataAccess.PurchaseOrder;
+    var supplierNames = (Dictionary<int, string>)ViewBag.SupplierNames;
+
+    var statusNames = new Dictionary<string, string>
+{
+        { "Pending", "Pendiente" },
+        { "Ordered", "Solicitada" },
+        { "Received", "Recibida" },
+        { "Cancelled", "Cancelada" }
+    };
+}
+
+@* Encabezado con el botón de agregar a la derecha. *@
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Órdenes de compra</h2>
+
+    <a class="btn btn-primary"
+       href="@Url.Action("Index", "PurchaseOrders", new { mode = "create" })">
+        Agregar orden
+    </a>
+</div>
+
+@* Mensajes del resultado de las operaciones. *@
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+@if (supplierNames.Count == 0)
+{
+    <div class="alert alert-info">
+        Primero registrá un proveedor.
+    </div>
+}
+
+@* Formulario compartido para crear y editar. *@
+@if (mode == "create" || mode == "edit")
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            @(mode == "create" ? "Agregar orden de compra" : "Editar orden de compra")
+        </div>
+
+        <div class="card-body">
+            @using (Html.BeginForm("Save", "PurchaseOrders", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+                <input type="hidden" name="Id" value="@selected.Id" />
+
+                <div class="mb-3">
+                    <label for="SupplierId">Proveedor</label>
+                    @Html.DropDownList(
+                        "SupplierId",
+                        (SelectList)ViewBag.SupplierOptions,
+                        "Seleccioná un proveedor",
+                        new { @class = "form-select", required = "required" })
+                </div>
+
+                <div class="mb-3">
+                    <label for="ExpectedDate">Fecha esperada</label>
+                    @Html.TextBox(
+                        "ExpectedDate",
+                        selected.ExpectedDate.HasValue
+                            ? selected.ExpectedDate.Value.ToString("yyyy-MM-dd")
+                            : "",
+                        new { @class = "form-control", type = "date" })
+                </div>
+
+                <div class="mb-3">
+                    <label for="Status">Estado</label>
+                    @Html.DropDownList(
+                        "Status",
+                        new SelectList(
+                            statusNames, "Key", "Value", selected.Status),
+                        new { @class = "form-select" })
+                </div>
+
+                <p class="text-muted">
+                    El total se calculará desde los artículos de la orden.
+                </p>
+
+                <button type="submit" class="btn btn-success">Guardar</button>
+                <a class="btn btn-secondary"
+                   href="@Url.Action("Index", "PurchaseOrders")">
+                    Cancelar
+                </a>
+            }
+        </div>
+    </div>
+}
+
+@* Detalle completo de la orden. *@
+@if (mode == "details")
+{
+    <div class="card mb-4">
+        <div class="card-header">Detalle de la orden de compra</div>
+
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@selected.Id</dd>
+
+                <dt class="col-sm-3">ID del proveedor</dt>
+                <dd class="col-sm-9">@selected.SupplierId</dd>
+
+                <dt class="col-sm-3">Proveedor</dt>
+                <dd class="col-sm-9">
+                    @(supplierNames.ContainsKey(selected.SupplierId)
+                        ? supplierNames[selected.SupplierId]
+                        : "No disponible")
+                </dd>
+
+                <dt class="col-sm-3">Fecha de orden (UTC)</dt>
+                <dd class="col-sm-9">
+                    @selected.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                </dd>
+
+                <dt class="col-sm-3">Fecha esperada</dt>
+                <dd class="col-sm-9">
+                    @(selected.ExpectedDate.HasValue
+                        ? selected.ExpectedDate.Value.ToString("dd/MM/yyyy")
+                        : "Sin registrar")
+                </dd>
+
+                <dt class="col-sm-3">Estado</dt>
+                <dd class="col-sm-9">
+                    @(statusNames.ContainsKey(selected.Status)
+                        ? statusNames[selected.Status]
+                        : selected.Status)
+                </dd>
+
+                <dt class="col-sm-3">Costo total</dt>
+                <dd class="col-sm-9">@selected.TotalCost.ToString("N2")</dd>
+            </dl>
+
+            <a class="btn btn-secondary"
+               href="@Url.Action("Index", "PurchaseOrders")">
+                Volver
+            </a>
+        </div>
+    </div>
+}
+
+@* Confirmación antes de eliminar. *@
+@if (mode == "delete")
+{
+    <div class="alert alert-warning">
+        <p>¿Eliminar la orden de compra <strong>#@selected.Id</strong>?</p>
+
+        @using (Html.BeginForm("Delete", "PurchaseOrders", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@selected.Id" />
+
+            <button type="submit" class="btn btn-danger">
+                Confirmar eliminación
+            </button>
+            <a class="btn btn-secondary"
+               href="@Url.Action("Index", "PurchaseOrders")">
+                Cancelar
+            </a>
+        }
+    </div>
+}
+
+@* Tabla principal con las acciones a la derecha. *@
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Proveedor</th>
+                <th>Fecha de orden (UTC)</th>
+                <th>Estado</th>
+                <th>Costo total</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+                <th>Detalle</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var order in Model)
+            {
+                <tr>
+                    <td>@order.Id</td>
+                    <td>
+                        @(supplierNames.ContainsKey(order.SupplierId)
+                            ? supplierNames[order.SupplierId]
+                            : "#" + order.SupplierId)
+                    </td>
+                    <td>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>
+                        @(statusNames.ContainsKey(order.Status)
+                            ? statusNames[order.Status]
+                            : order.Status)
+                    </td>
+                    <td>@order.TotalCost.ToString("N2")</td>
+
+                    <td>
+                        <a class="btn btn-warning btn-sm"
+                           href="@Url.Action("Index", "PurchaseOrders",
+                               new { mode = "edit", id = order.Id })">
+                            Editar
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-danger btn-sm"
+                           href="@Url.Action("Index", "PurchaseOrders",
+                               new { mode = "delete", id = order.Id })">
+                            Eliminar
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-info btn-sm"
+                           href="@Url.Action("Index", "PurchaseOrders",
+                               new { mode = "details", id = order.Id })">
+                            Detalle
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Todavía no hay órdenes de compra registradas.</p>
+}

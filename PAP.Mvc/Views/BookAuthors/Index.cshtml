@@ -1,0 +1,208 @@
+﻿@using System.Linq
+@model IEnumerable<PAP.Models.BookAuthorLink>
+
+@{
+    ViewBag.Title = "Libro–Autor";
+
+    // Recupera la operación y la asociación seleccionada.
+    string mode = ViewBag.Mode as string ?? "";
+    var selected = ViewBag.SelectedLink as PAP.Models.BookAuthorLink;
+}
+
+@* Encabezado con el botón de agregar a la derecha. *@
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Libros y autores</h2>
+
+    <a class="btn btn-primary"
+       href="@Url.Action("Index", "BookAuthors", new { mode = "create" })">
+        Asociar autor
+    </a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+@if (!(bool)ViewBag.CanCreate)
+{
+    <div class="alert alert-info">
+        Debe existir al menos un libro y un autor.
+    </div>
+}
+
+@* Formulario compartido para agregar y editar asociaciones. *@
+@if (mode == "create" || mode == "edit")
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            @(mode == "create" ? "Asociar autor" : "Editar asociación")
+        </div>
+
+        <div class="card-body">
+            @using (Html.BeginForm("Save", "BookAuthors", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+                @* Conserva la clave original para localizar la relación editada. *@
+                if (mode == "edit")
+                {
+                    <input type="hidden" name="originalBookId"
+                           value="@ViewBag.OriginalBookId" />
+                    <input type="hidden" name="originalAuthorId"
+                           value="@ViewBag.OriginalAuthorId" />
+                }
+
+                <div class="mb-3">
+                    <label for="BookId">Libro</label>
+                    @Html.DropDownList(
+                        "BookId",
+                        (SelectList)ViewBag.BookOptions,
+                        "Seleccioná un libro",
+                        new { @class = "form-select", required = "required" })
+                </div>
+
+                <div class="mb-3">
+                    <label for="AuthorId">Autor</label>
+                    @Html.DropDownList(
+                        "AuthorId",
+                        (SelectList)ViewBag.AuthorOptions,
+                        "Seleccioná un autor",
+                        new { @class = "form-select", required = "required" })
+                </div>
+
+                <button type="submit" class="btn btn-success">Guardar</button>
+                <a class="btn btn-secondary"
+                   href="@Url.Action("Index", "BookAuthors")">
+                    Cancelar
+                </a>
+            }
+        </div>
+    </div>
+}
+
+@* Muestra los dos identificadores y sus nombres relacionados. *@
+@if (mode == "details")
+{
+    <div class="card mb-4">
+        <div class="card-header">Detalle de la asociación</div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID del libro</dt>
+                <dd class="col-sm-9">@selected.BookId</dd>
+
+                <dt class="col-sm-3">Libro</dt>
+                <dd class="col-sm-9">@selected.BookTitle</dd>
+
+                <dt class="col-sm-3">ID del autor</dt>
+                <dd class="col-sm-9">@selected.AuthorId</dd>
+
+                <dt class="col-sm-3">Autor</dt>
+                <dd class="col-sm-9">@selected.AuthorName</dd>
+            </dl>
+
+            <a class="btn btn-secondary"
+               href="@Url.Action("Index", "BookAuthors")">
+                Volver
+            </a>
+        </div>
+    </div>
+}
+
+@* Elimina solo la asociación, conservando libro y autor. *@
+@if (mode == "delete")
+{
+    <div class="alert alert-warning">
+        <p>
+            ¿Quitar a <strong>@selected.AuthorName</strong>
+            del libro <strong>@selected.BookTitle</strong>?
+        </p>
+
+        @using (Html.BeginForm("Delete", "BookAuthors", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" name="bookId" value="@selected.BookId" />
+            <input type="hidden" name="authorId" value="@selected.AuthorId" />
+
+            <button type="submit" class="btn btn-danger">
+                Confirmar eliminación
+            </button>
+            <a class="btn btn-secondary"
+               href="@Url.Action("Index", "BookAuthors")">
+                Cancelar
+            </a>
+        }
+    </div>
+}
+
+@* Tabla con las dos partes de la clave y las acciones a la derecha. *@
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>ID libro</th>
+                <th>Libro</th>
+                <th>ID autor</th>
+                <th>Autor</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+                <th>Detalle</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var link in Model)
+            {
+                <tr>
+                    <td>@link.BookId</td>
+                    <td>@link.BookTitle</td>
+                    <td>@link.AuthorId</td>
+                    <td>@link.AuthorName</td>
+                    <td>
+                        <a class="btn btn-warning btn-sm"
+                           href="@Url.Action("Index", "BookAuthors",
+                               new {
+                                   mode = "edit",
+                                   bookId = link.BookId,
+                                   authorId = link.AuthorId
+                               })">
+                            Editar
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-danger btn-sm"
+                           href="@Url.Action("Index", "BookAuthors",
+                               new {
+                                   mode = "delete",
+                                   bookId = link.BookId,
+                                   authorId = link.AuthorId
+                               })">
+                            Eliminar
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-info btn-sm"
+                           href="@Url.Action("Index", "BookAuthors",
+                               new {
+                                   mode = "details",
+                                   bookId = link.BookId,
+                                   authorId = link.AuthorId
+                               })">
+                            Detalle
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Todavía no hay asociaciones registradas.</p>
+}

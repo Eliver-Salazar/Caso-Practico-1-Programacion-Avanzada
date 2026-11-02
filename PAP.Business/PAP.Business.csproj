@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddressManager.cs" />
+    <Compile Include="BookAuthorManager.cs" />
     <Compile Include="BookManager.cs" />
     <Compile Include="AuthorManager.cs" />
     <Compile Include="CartItemManager.cs" />
@@ -49,6 +50,11 @@
     <Compile Include="CustomerManager.cs" />
     <Compile Include="EmployeeManager.cs" />
     <Compile Include="InventoryManager.cs" />
+    <Compile Include="OrderItemManager.cs" />
+    <Compile Include="OrderManager.cs" />
+    <Compile Include="PaymentManager.cs" />
+    <Compile Include="PurchaseOrderItemManager.cs" />
+    <Compile Include="PurchaseOrderManager.cs" />
     <Compile Include="ReviewManager.cs" />
     <Compile Include="ShoppingCartManager.cs" />
     <Compile Include="SupplierManager.cs" />

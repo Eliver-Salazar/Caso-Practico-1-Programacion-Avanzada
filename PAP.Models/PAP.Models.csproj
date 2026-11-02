@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Book.cs" />
+    <Compile Include="BookAuthorLink.cs" />
     <Compile Include="Employee.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="LibraryItem.cs" />

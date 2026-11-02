@@ -1,0 +1,273 @@
+﻿@using System.Linq
+@using System.Collections.Generic
+@model IEnumerable<PAP.DataAccess.Payment>
+
+@{
+    ViewBag.Title = "Pagos";
+
+    // Recupera la operación, el pago y las etiquetas de los pedidos.
+    string mode = ViewBag.Mode as string ?? "";
+    var selected = ViewBag.SelectedPayment as PAP.DataAccess.Payment;
+    var orderNames = (Dictionary<int, string>)ViewBag.OrderNames;
+
+    var methodNames = new Dictionary<string, string>
+{
+        { "Cash", "Efectivo" },
+        { "Card", "Tarjeta" },
+        { "Transfer", "Transferencia" },
+        { "SINPE", "SINPE" }
+    };
+
+    var statusNames = new Dictionary<string, string>
+{
+        { "Pending", "Pendiente" },
+        { "Completed", "Completado" },
+        { "Failed", "Fallido" },
+        { "Refunded", "Reembolsado" }
+    };
+}
+
+@* Encabezado y botón de agregar a la derecha. *@
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Pagos</h2>
+
+    <a class="btn btn-primary"
+       href="@Url.Action("Index", "Payments", new { mode = "create" })">
+        Agregar pago
+    </a>
+</div>
+
+@* Mensajes del resultado de las operaciones. *@
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+@if (orderNames.Count == 0)
+{
+    <div class="alert alert-info">
+        Primero registrá un pedido.
+    </div>
+}
+
+@* Formulario compartido para crear y editar. *@
+@if (mode == "create" || mode == "edit")
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            @(mode == "create" ? "Agregar pago" : "Editar pago")
+        </div>
+
+        <div class="card-body">
+            @using (Html.BeginForm("Save", "Payments", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+                <input type="hidden" name="Id" value="@selected.Id" />
+
+                <div class="mb-3">
+                    <label for="OrderId">Pedido</label>
+                    @Html.DropDownList(
+                        "OrderId",
+                        (SelectList)ViewBag.OrderOptions,
+                        "Seleccioná un pedido",
+                        new { @class = "form-select", required = "required" })
+                </div>
+
+                <div class="mb-3">
+                    <label for="PaymentMethod">Método de pago</label>
+                    @Html.DropDownList(
+                        "PaymentMethod",
+                        new SelectList(
+                            methodNames, "Key", "Value", selected.PaymentMethod),
+                        new { @class = "form-select" })
+                </div>
+
+                <div class="mb-3">
+                    <label for="Amount">Monto</label>
+                    @Html.TextBox("Amount", selected.Amount.ToString("F2"),
+                        new
+                        {
+                            @class = "form-control",
+                            inputmode = "decimal",
+                            required = "required"
+                        })
+                </div>
+
+                <div class="mb-3">
+                    <label for="Status">Estado</label>
+                    @Html.DropDownList(
+                        "Status",
+                        new SelectList(
+                            statusNames, "Key", "Value", selected.Status),
+                        new { @class = "form-select" })
+                </div>
+
+                <div class="mb-3">
+                    <label for="TransactionRef">Referencia de transacción</label>
+                    @Html.TextBox("TransactionRef", selected.TransactionRef,
+                        new
+                        {
+                            @class = "form-control",
+                            maxlength = "100"
+                        })
+                </div>
+
+                <button type="submit" class="btn btn-success">Guardar</button>
+                <a class="btn btn-secondary"
+                   href="@Url.Action("Index", "Payments")">
+                    Cancelar
+                </a>
+            }
+        </div>
+    </div>
+}
+
+@* Detalle completo del pago. *@
+@if (mode == "details")
+{
+    <div class="card mb-4">
+        <div class="card-header">Detalle del pago</div>
+
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@selected.Id</dd>
+
+                <dt class="col-sm-3">Pedido</dt>
+                <dd class="col-sm-9">
+                    @(orderNames.ContainsKey(selected.OrderId)
+                        ? orderNames[selected.OrderId]
+                        : "#" + selected.OrderId)
+                </dd>
+
+                <dt class="col-sm-3">Método</dt>
+                <dd class="col-sm-9">
+                    @(methodNames.ContainsKey(selected.PaymentMethod)
+                        ? methodNames[selected.PaymentMethod]
+                        : selected.PaymentMethod)
+                </dd>
+
+                <dt class="col-sm-3">Monto</dt>
+                <dd class="col-sm-9">@selected.Amount.ToString("N2")</dd>
+
+                <dt class="col-sm-3">Fecha de pago (UTC)</dt>
+                <dd class="col-sm-9">
+                    @selected.PaymentDate.ToString("dd/MM/yyyy HH:mm")
+                </dd>
+
+                <dt class="col-sm-3">Estado</dt>
+                <dd class="col-sm-9">
+                    @(statusNames.ContainsKey(selected.Status)
+                        ? statusNames[selected.Status]
+                        : selected.Status)
+                </dd>
+
+                <dt class="col-sm-3">Referencia</dt>
+                <dd class="col-sm-9">@selected.TransactionRef</dd>
+            </dl>
+
+            <a class="btn btn-secondary"
+               href="@Url.Action("Index", "Payments")">
+                Volver
+            </a>
+        </div>
+    </div>
+}
+
+@* Confirmación antes de eliminar. *@
+@if (mode == "delete")
+{
+    <div class="alert alert-warning">
+        <p>¿Eliminar el pago <strong>#@selected.Id</strong>?</p>
+
+        @using (Html.BeginForm("Delete", "Payments", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@selected.Id" />
+
+            <button type="submit" class="btn btn-danger">
+                Confirmar eliminación
+            </button>
+            <a class="btn btn-secondary"
+               href="@Url.Action("Index", "Payments")">
+                Cancelar
+            </a>
+        }
+    </div>
+}
+
+@* Tabla principal con las acciones a la derecha. *@
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Pedido</th>
+                <th>Método</th>
+                <th>Monto</th>
+                <th>Estado</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+                <th>Detalle</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var payment in Model)
+            {
+                <tr>
+                    <td>@payment.Id</td>
+                    <td>
+                        @(orderNames.ContainsKey(payment.OrderId)
+                            ? orderNames[payment.OrderId]
+                            : "#" + payment.OrderId)
+                    </td>
+                    <td>
+                        @(methodNames.ContainsKey(payment.PaymentMethod)
+                            ? methodNames[payment.PaymentMethod]
+                            : payment.PaymentMethod)
+                    </td>
+                    <td>@payment.Amount.ToString("N2")</td>
+                    <td>
+                        @(statusNames.ContainsKey(payment.Status)
+                            ? statusNames[payment.Status]
+                            : payment.Status)
+                    </td>
+
+                    <td>
+                        <a class="btn btn-warning btn-sm"
+                           href="@Url.Action("Index", "Payments",
+                               new { mode = "edit", id = payment.Id })">
+                            Editar
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-danger btn-sm"
+                           href="@Url.Action("Index", "Payments",
+                               new { mode = "delete", id = payment.Id })">
+                            Eliminar
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-info btn-sm"
+                           href="@Url.Action("Index", "Payments",
+                               new { mode = "details", id = payment.Id })">
+                            Detalle
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Todavía no hay pagos registrados.</p>
+}

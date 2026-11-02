@@ -1,167 +1,350 @@
 ﻿@*
-    Ejemplo: Vistas compartidas
-    _Layout.cshtml es la plantilla común (nav, footer, CSS/JS). Las vistas hijas
-    insertan su contenido con @RenderBody().
-*@
-@*
-    Ejemplo: Diseño de vistas
-    El Layout define la estructura HTML general; cada vista solo aporta el contenido de la página.
+    Plantilla compartida de la aplicación.
+    Agrupa los enlaces y muestra cada vista mediante RenderBody().
 *@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title - My ASP.NET Application</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewBag.Title - BookStore</title>
+
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
+
+    <style>
+        /* Estilos limitados al menú para conservar el diseño de las vistas. */
+        .bookstore-navbar {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+            .bookstore-navbar .navbar-brand {
+                font-weight: 700;
+                margin-right: 28px;
+            }
+
+            .bookstore-navbar .nav-link {
+                background: transparent;
+                border: 0;
+                font: inherit;
+                text-align: left;
+                white-space: nowrap;
+                padding: 10px 12px;
+                border-radius: 6px;
+            }
+
+                .bookstore-navbar .nav-link:hover,
+                .bookstore-navbar .nav-link:focus {
+                    background-color: rgba(255, 255, 255, 0.08);
+                }
+
+            /* Los desplegables mantienen el estilo oscuro del menú. */
+            .bookstore-navbar .dropdown-menu {
+                background-color: #202630;
+                border: 1px solid #384150;
+                border-radius: 8px;
+                padding: 6px;
+            }
+
+            .bookstore-navbar .dropdown-item {
+                color: #e8edf4;
+                padding: 9px 14px;
+                border-radius: 5px;
+                white-space: normal;
+            }
+
+                .bookstore-navbar .dropdown-item:hover,
+                .bookstore-navbar .dropdown-item:focus {
+                    color: #ffffff;
+                    background-color: #344256;
+                }
+
+            .bookstore-navbar .dropdown-divider {
+                border-color: #384150;
+            }
+
+        /* Separa el contenido del menú. */
+        .bookstore-content {
+            padding-top: 24px;
+        }
+    </style>
 </head>
+
 <body>
-    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark">
+    @* Se expande en pantallas grandes y se contrae en las pequeñas. *@
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark bookstore-navbar"
+         aria-label="Menú principal">
         <div class="container">
-            @Html.ActionLink("Application name", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
-            <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" title="Toggle navigation" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="Toggle navigation">
+            @Html.ActionLink(
+                "BookStore",
+                "Index",
+                "Home",
+                new { area = "" },
+                new { @class = "navbar-brand" })
+
+            @* El destino coincide con el ID del contenedor del menú. *@
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#mainNavigation"
+                    aria-controls="mainNavigation"
+                    aria-expanded="false"
+                    aria-label="Abrir o cerrar menú">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse d-sm-inline-flex justify-content-between">
-                <ul class="navbar-nav flex-grow-1">
-                    <li>@Html.ActionLink("Home", "Index", "Home", new { area = "" }, new { @class = "nav-link" })</li>
-                    <li>@Html.ActionLink("About", "About", "Home", new { area = "" }, new { @class = "nav-link" })</li>
-                    <li>@Html.ActionLink("Contact", "Contact", "Home", new { area = "" }, new { @class = "nav-link" })</li>
-                    <li>@Html.ActionLink("Books", "Index", "Library", new { area = "" }, new { @class = "nav-link" })</li>
-                    <li>@Html.ActionLink("Cards", "Catalog", "Library", new { vista = "cards" }, new { @class = "nav-link" })</li>
-                    <li>@Html.ActionLink("Crear", "Create", "Library", new { area = "" }, new { @class = "nav-link" })</li>
-                    <li>@Html.ActionLink("Binder", "PrecioDemo", "Library", new { area = "" }, new { @class = "nav-link" })</li>
-                    @* Acceso a la administración de autores. *@
-                    <li>
+
+            <div class="collapse navbar-collapse" id="mainNavigation">
+                <ul class="navbar-nav ms-auto">
+
+                    @* Acceso a la página principal. *@
+                    <li class="nav-item">
                         @Html.ActionLink(
-                            "Autores",
-                            "Index",
-                            "Authors",
-                            null,
+                            "Inicio", "Index", "Home",
+                            new { area = "" },
                             new { @class = "nav-link" })
                     </li>
-                    @* Acceso a la administración de categorías. *@
-                    <li>
-                        @Html.ActionLink(
-                            "Categorías",
-                            "Index",
-                            "Categories",
-                            null,
-                            new { @class = "nav-link" })
+
+                    @* Libros y sus catálogos relacionados. *@
+                    <li class="nav-item dropdown">
+                        <button class="nav-link dropdown-toggle"
+                                id="catalogMenu"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                            Catálogo
+                        </button>
+
+                        <ul class="dropdown-menu" aria-labelledby="catalogMenu">
+                            <li>
+                                @Html.ActionLink(
+                                    "Libros", "Index", "Library",
+                                    new { area = "" },
+                                    new { @class = "dropdown-item" })
+                            </li>
+                            <li>
+                                @Html.ActionLink(
+                                    "Autores", "Index", "Authors", null,
+                                    new { @class = "dropdown-item" })
+                            </li>
+                            <li>
+                                @Html.ActionLink(
+                                    "Categorías", "Index", "Categories", null,
+                                    new { @class = "dropdown-item" })
+                            </li>
+                            <li>
+                                @Html.ActionLink(
+                                    "Géneros", "Index", "Genres", null,
+                                    new { @class = "dropdown-item" })
+                            </li>
+                            <li>
+                                @Html.ActionLink(
+                                    "Editoriales", "Index", "Publishers", null,
+                                    new { @class = "dropdown-item" })
+                            </li>
+                            <li>
+                                @Html.ActionLink(
+                                    "Reseñas", "Index", "Reviews", null,
+                                    new { @class = "dropdown-item" })
+                            </li>
+                            @* Acceso a las asociaciones entre libros y autores. *@
+                            <li>
+                                @Html.ActionLink(
+                                    "Libros y autores",
+                                    "Index",
+                                    "BookAuthors",
+                                    null,
+                                    new { @class = "dropdown-item" })
+                            </li>
+                        </ul>
                     </li>
-                    @* Acceso a la administración de géneros. *@
-                    <li>
-                        @Html.ActionLink(
-                            "Géneros",
-                            "Index",
-                            "Genres",
-                            null,
-                            new { @class = "nav-link" })
+
+                    @* Clientes, direcciones y carritos. *@
+                    <li class="nav-item dropdown">
+                        <button class="nav-link dropdown-toggle"
+                                id="customersMenu"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                            Clientes
+                        </button>
+
+                        <ul class="dropdown-menu" aria-labelledby="customersMenu">
+                            <li>
+                                @Html.ActionLink(
+                                    "Clientes", "Index", "Customers", null,
+                                    new { @class = "dropdown-item" })
+                            </li>
+                            <li>
+                                @Html.ActionLink(
+                                    "Direcciones", "Index", "Addresses", null,
+                                    new { @class = "dropdown-item" })
+                            </li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li>
+                                @Html.ActionLink(
+                                    "Carritos", "Index", "ShoppingCarts", null,
+                                    new { @class = "dropdown-item" })
+                            </li>
+                            <li>
+                                @Html.ActionLink(
+                                    "Artículos del carrito", "Index", "CartItems", null,
+                                    new { @class = "dropdown-item" })
+                            </li>
+                        </ul>
                     </li>
-                    @* Acceso a la administración de roles. *@
-                    <li>
-                        @Html.ActionLink(
-                            "Roles",
-                            "Index",
-                            "Roles",
-                            null,
-                            new { @class = "nav-link" })
+
+                    @* Pedidos de clientes y pagos. *@
+                    <li class="nav-item dropdown">
+                        <button class="nav-link dropdown-toggle"
+                                id="salesMenu"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                            Ventas
+                        </button>
+
+                        <ul class="dropdown-menu" aria-labelledby="salesMenu">
+                            <li>
+                                @Html.ActionLink(
+                                    "Pedidos", "Index", "Orders", null,
+                                    new { @class = "dropdown-item" })
+                            </li>
+                            <li>
+                                @Html.ActionLink(
+                                    "Artículos de pedidos", "Index", "OrderItems", null,
+                                    new { @class = "dropdown-item" })
+                            </li>
+                            <li>
+                                @Html.ActionLink(
+                                    "Pagos", "Index", "Payments", null,
+                                    new { @class = "dropdown-item" })
+                            </li>
+                        </ul>
                     </li>
-                    @* Acceso a la administración de editoriales. *@
-                    <li>
-                        @Html.ActionLink(
-                            "Editoriales",
-                            "Index",
-                            "Publishers",
-                            null,
-                            new { @class = "nav-link" })
+
+                    @* Proveedores y abastecimiento. *@
+                    <li class="nav-item dropdown">
+                        <button class="nav-link dropdown-toggle"
+                                id="purchasesMenu"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                            Compras
+                        </button>
+
+                        <ul class="dropdown-menu" aria-labelledby="purchasesMenu">
+                            <li>
+                                @Html.ActionLink(
+                                    "Proveedores", "Index", "Suppliers", null,
+                                    new { @class = "dropdown-item" })
+                            </li>
+                            <li>
+                                @Html.ActionLink(
+                                    "Órdenes de compra", "Index", "PurchaseOrders", null,
+                                    new { @class = "dropdown-item" })
+                            </li>
+                            <li>
+                                @Html.ActionLink(
+                                    "Artículos de compra", "Index", "PurchaseOrderItems", null,
+                                    new { @class = "dropdown-item" })
+                            </li>
+                        </ul>
                     </li>
-                    @* Acceso a la administración de proveedores. *@
-                    <li>
-                        @Html.ActionLink(
-                            "Proveedores",
-                            "Index",
-                            "Suppliers",
-                            null,
-                            new { @class = "nav-link" })
+
+                    @* Personal, roles e inventario. *@
+                    <li class="nav-item dropdown">
+                        <button class="nav-link dropdown-toggle"
+                                id="administrationMenu"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                            Administración
+                        </button>
+
+                        <ul class="dropdown-menu"
+                            aria-labelledby="administrationMenu">
+                            <li>
+                                @Html.ActionLink(
+                                    "Empleados", "Index", "Employees", null,
+                                    new { @class = "dropdown-item" })
+                            </li>
+                            <li>
+                                @Html.ActionLink(
+                                    "Roles", "Index", "Roles", null,
+                                    new { @class = "dropdown-item" })
+                            </li>
+                            <li>
+                                @Html.ActionLink(
+                                    "Inventario", "Index", "Inventory", null,
+                                    new { @class = "dropdown-item" })
+                            </li>
+                        </ul>
                     </li>
-                    @* Acceso a la administración de clientes. *@
-                    <li>
-                        @Html.ActionLink(
-                            "Clientes",
-                            "Index",
-                            "Customers",
-                            null,
-                            new { @class = "nav-link" })
-                    </li>
-                    @* Acceso a la administración de direcciones. *@
-                    <li>
-                        @Html.ActionLink(
-                            "Direcciones",
-                            "Index",
-                            "Addresses",
-                            null,
-                            new { @class = "nav-link" })
-                    </li>
-                    @* Acceso a la administración de empleados. *@
-                    <li>
-                        @Html.ActionLink(
-                            "Empleados",
-                            "Index",
-                            "Employees",
-                            null,
-                            new { @class = "nav-link" })
-                    </li>
-                    @* Acceso a la administración de carritos. *@
-                    <li>
-                        @Html.ActionLink(
-                            "Carritos",
-                            "Index",
-                            "ShoppingCarts",
-                            null,
-                            new { @class = "nav-link" })
-                    </li>
-                    @* Acceso a la administración del inventario. *@
-                    <li>
-                        @Html.ActionLink(
-                            "Inventario",
-                            "Index",
-                            "Inventory",
-                            null,
-                            new { @class = "nav-link" })
-                    </li>
-                    @* Acceso a los artículos de los carritos. *@
-                    <li>
-                        @Html.ActionLink(
-                            "Artículos del carrito",
-                            "Index",
-                            "CartItems",
-                            null,
-                            new { @class = "nav-link" })
-                    </li>
-                    @* Acceso a la administración de reseñas. *@
-                    <li>
-                        @Html.ActionLink(
-                            "Reseñas",
-                            "Index",
-                            "Reviews",
-                            null,
-                            new { @class = "nav-link" })
+
+                    @* Conserva los accesos de las prácticas del profesor. *@
+                    <li class="nav-item dropdown">
+                        <button class="nav-link dropdown-toggle"
+                                id="extrasMenu"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                            Más
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end"
+                            aria-labelledby="extrasMenu">
+                            <li>
+                                @Html.ActionLink(
+                                    "Libros en tarjetas", "Catalog", "Library",
+                                    new { vista = "cards" },
+                                    new { @class = "dropdown-item" })
+                            </li>
+                            <li>
+                                @Html.ActionLink(
+                                    "Crear libro", "Create", "Library",
+                                    new { area = "" },
+                                    new { @class = "dropdown-item" })
+                            </li>
+                            <li>
+                                @Html.ActionLink(
+                                    "Demo de precios", "PrecioDemo", "Library",
+                                    new { area = "" },
+                                    new { @class = "dropdown-item" })
+                            </li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li>
+                                @Html.ActionLink(
+                                    "Acerca de", "About", "Home",
+                                    new { area = "" },
+                                    new { @class = "dropdown-item" })
+                            </li>
+                            <li>
+                                @Html.ActionLink(
+                                    "Contacto", "Contact", "Home",
+                                    new { area = "" },
+                                    new { @class = "dropdown-item" })
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
-    <div class="container body-content">
+
+    @* Cada vista inserta aquí su contenido. *@
+    <div class="container body-content bookstore-content">
         @RenderBody()
+
         <hr />
+
         <footer>
-            <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
+            <p>&copy; @DateTime.Now.Year - BookStore</p>
         </footer>
     </div>
 
+    @* Conserva los bundles y los scripts particulares de cada vista. *@
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
     @RenderSection("scripts", required: false)
