@@ -6,9 +6,7 @@ using System.Web.Mvc;
 
 using PAP.Business;
 using PAP.DataAccess;
-using System;
-using System.Linq;
-using System.Web.Mvc;
+
 
 namespace PAP.Mvc.Controllers
 {
